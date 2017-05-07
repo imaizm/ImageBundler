@@ -1,0 +1,24 @@
+apply plugin: 'java'
+
+repositories {
+	jcenter()
+}
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+dependencies {
+	//compile group: 'log4j', name: 'log4j', version: '1.2.17'
+	// https://mvnrepository.com/artifact/org.apache.commons/commons-compress
+	compile group: 'org.apache.commons', name: 'commons-compress', version: '1.13'
+
+	// Use JUnit test framework
+	testCompile 'junit:junit:4.12'
+}
+
+jar {
+	manifest {
+		attributes 'Implementation-Title': 'ImageBundler'
+		attributes "Main-Class" : "imaizm.imagebundler.EntryPoint"
+	}
+	from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+}

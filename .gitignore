@@ -10,3 +10,18 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+/bin/
+
+# Gradle
+/build/
+/.gradle/
+
+# Eclipse
+/.classpath
+/.project
+
+# Eclipse buildship
+/.settings/
+
+# Mac work file
+.DS_Store
