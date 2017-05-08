@@ -38,10 +38,6 @@ import javax.swing.JFileChooser;
 import javax.swing.ProgressMonitor;
 
 public class EntryPoint {
-	/** リターンコード：正常終了時（0） */
-	public static final int RETURN_CODE_NORMAL = 0;
-	/** リターンコード：以上終了時（1） */
-	public static final int RETURN_CODE_ERROR = 1;
 	/** 作業用ディレクトリのパスを格納 */
 	private String tempDirectoryPath;
 	/** 作業量ディレクトリに作成する仮ディレクトリのディレクトリ名を格納 */
@@ -449,7 +445,7 @@ public class EntryPoint {
 
 	public static void main(String args[]) {
 		// デフォルトリターンコード＝１
-		int returnCode = 1;
+		int returnCode = Constants.RETURN_CODE_ERROR;
 		
 		try {
 			returnCode = execute(args);
@@ -461,7 +457,7 @@ public class EntryPoint {
 
 	public static int execute(String args[]) throws IOException {
 		// デフォルトリターンコード＝１
-		int returnCode = 1;
+		int returnCode = Constants.RETURN_CODE_ERROR;
 		
 		//
 		// 対象ファイルの取得
@@ -470,43 +466,10 @@ public class EntryPoint {
 		
 		// 引数にて対象ファイルの指定がなかった場合
 		if (args.length == 0) {
-			File currentDirectoryForJFileChooser = null;
-			
-			//
-			// ファイル選択ダイアログの起点を定める
-			//
-			
-			// ユーザディレクトリ直下からImageBundler.iniというファイルを探す
-			String currentDirectoryPath = System.getProperty("user.dir");
-			String iniFileName = currentDirectoryPath + File.separator + "ImageBundler" + ".ini";
-			File iniFile = new File(iniFileName);
-			// ImageConverterForPda.iniファイルが存在した場合
-			if (iniFile.exists()) {
-				BufferedReader bufferedReader = null;
-				try {
-					
-					bufferedReader = new BufferedReader(new FileReader(iniFile));
-					String line = bufferedReader.readLine();
-					if (line != null) {
-						currentDirectoryForJFileChooser = getCurrentDirectory(line);
-					}
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-					return returnCode;
-				} finally {
-					try {
-						bufferedReader.close();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			
-			// ImageConverterForPda.iniファイルが存在しない場合
-			} else {
-				// ユーザディレクトリにImageConverterForPda.iniファイルを作成する
-				iniFile.createNewFile();
-			}
+
+			// iniファイルが有ればそこから前回の作業ディレクトリを取得
+			IniFileHandler iniFileHandler = new IniFileHandler();
+			File currentDirectoryForJFileChooser = iniFileHandler.getWorkDirectoryOfLastTime();
 			
 			String parentDirectoryOfSelectedFile = null;
 			
@@ -525,22 +488,7 @@ public class EntryPoint {
 				return returnCode;
 			}
 			
-			PrintWriter printWriter = null;
-			try {
-				
-				printWriter = new PrintWriter(iniFile);
-				printWriter.print(parentDirectoryOfSelectedFile);
-			} catch (IOException e) {
-				
-				e.printStackTrace();
-				return returnCode;
-			} finally {
-				try {
-					printWriter.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
+			iniFileHandler.writeWorkDirectoryOfLastTime(parentDirectoryOfSelectedFile);
 			
 		// 引数にて対象ファイルの指定があった場合
 		} else if (args.length == 1) {
@@ -575,30 +523,4 @@ public class EntryPoint {
 		converter.convert(inputFile, 768, 1024);
 		return returnCode;
 	}
-	
-	/**
-	 * path文字列に指定されたディレクトリパスを検証し、存在すればそのパスのFileオブジェクトを、
-	 * 存在しなければパスを一つづつ遡っていき、最初に発見した存在するパスのFileオブジェクトを返す。
-	 * @param path 存在の検証をするパス文字列
-	 * @return 存在したパスのFileオブジェクト
-	 */
-	private static File getCurrentDirectory(String path) {
-		
-		File fileForReturn = null;
-		
-		fileForReturn = new File(path);
-		if (! fileForReturn.exists()) {
-			
-			while (
-				fileForReturn != null &&
-				fileForReturn.exists() == false) {
-				fileForReturn = fileForReturn.getParentFile();
-			}
-		}
-		
-		return fileForReturn;
-	}
-	
-	
-
 }
