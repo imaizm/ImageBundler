@@ -50,8 +50,6 @@ public class EntryPoint {
 	 */
 	public EntryPoint() {
 		
-		// 作業ディレクトリ、仮ディレクトリのセットアップ
-	//	tempDirectoryPath = System.getenv("TEMP");
 		// 作業ディレクトリ：実行時OSのTEMPディレクトリを取得
 		tempDirectoryPath = System.getProperty("java.io.tmpdir");
 		// 仮ディレクトリ：日時＋乱数５桁
@@ -81,32 +79,14 @@ public class EntryPoint {
 	public void convert(File inputFile, int width, int height)
 		throws IOException {
 		
-		// 入力ソースの拡張子を取得
-		String inputFileExtension =
-			inputFile.getName().substring(inputFile.getName().length() - 3, inputFile.getName().length());
+		InputFileHandler inputFileHandler =
+			new InputFileHandler(inputFile, this.workDirectory);
+		
+		convert(inputFile, inputFileHandler.getInputFiles(), width, height);
 		
 		// 入力ソースがディレクトリだった場合
 		if (inputFile.isDirectory()) {
 			
-			System.out.println("work directory : " + workDirectory.getAbsolutePath());
-
-			// 入力ソースのディレクトリからJpegファイルを取得
-			File[] inputFiles = inputFile.listFiles(
-				new FileFilter() {
-					public boolean accept(File file) {
-						if (file.isFile() && (
-								file.getName().toLowerCase().endsWith("jpg") ||
-								file.getName().toLowerCase().endsWith("jpeg"))) {
-							return true;
-						} else {
-							return false;
-						}
-					}
-				});
-			
-			convert(inputFile, inputFiles, width, height);
-			
-			// -------------
 			String outputZipFileName =
 					inputFile.getParent() +
 					File.separator +
@@ -116,36 +96,10 @@ public class EntryPoint {
 				System.out.println("output zip file name : " + outputZipFileName);
 
 				File outputZipFile =
-					store(inputFiles, outputZipFileName);
-			// -------------
-
-			
-
-		// 入力ソースがZipファイルだった場合
-		} else if (inputFileExtension.equalsIgnoreCase("zip")) {
-			
-			// 解答用仮ディレクトリの作成
-			File extractDirectory = new File(workDirectory.getPath() + "_extract");
-			extractDirectory.mkdir();
-			
-			// 入力ソースのZipファイルを解凍し、解凍されたファイル群からJpegファイルを取得
-			File[] inputFiles = inflate(inputFile, extractDirectory);
-			
-			// 対象となるJpegファイル群を変換
-			convert(inputFile, inputFiles, width, height);
-			
-			// 処理済みの解凍ファイルを削除
-			for (int i=0; i<inputFiles.length; i++) {
-				inputFiles[i].delete();
-			}
-			extractDirectory.delete();
-			
-		// 入力ソースがディレクトリでもZipファイルでもなかった場合
-		} else {
-			
-			// 異常終了
-			throw new RuntimeException("未対応のファイル形式です。");
+					store(inputFileHandler.getInputFiles(), outputZipFileName);
 		}
+		
+		inputFileHandler.close();
 	}
 	
 	private void convert(File inputFile, File[] inputFiles, int width, int height) throws IOException {
@@ -167,28 +121,8 @@ public class EntryPoint {
 			BufferedImage bufferedImage = ImageIO.read(inputFiles[i]);
 			if (bufferedImage != null) {
 				
-				// 
-				if (width > height && bufferedImage.getWidth() < bufferedImage.getHeight() ||
-					width < height && bufferedImage.getWidth() > bufferedImage.getHeight()) {
-					
-					// TODO 暫定的にモード固定
-					if (true) {
-						// 最大幅・高さ入れ替えモード
-						
-						int temp = width;
-						width = height;
-						height = width;
-					} else {
-						// 画像回転モード
-						
-						// 画像を1/4回転
-						bufferedImage = rotate(bufferedImage);
-					}
-				}
-
-				// 縮小後の幅・高さ値を取得
-				Dimension dimension = getScaledDimension(width, height, bufferedImage.getWidth(), bufferedImage.getHeight());
-				bufferedImage = resize(bufferedImage, dimension.width, dimension.height);
+				bufferedImage = ImageConverter.convert(bufferedImage, width, height);
+				
 				String outputFileName = 
 					workDirectory.getAbsolutePath() +
 					File.separator +
@@ -243,61 +177,6 @@ public class EntryPoint {
 		return decimalFormat;
 	}
 
-	private BufferedImage rotate(BufferedImage srcImage) {
-		int width = srcImage.getWidth();
-		int height = srcImage.getHeight();
-		BufferedImage newImage = new BufferedImage(height, width, srcImage.getType());
-		double x = (double)width / 2D;
-		double y = (double)height / 2D;
-		AffineTransform affineTransform =
-			AffineTransform.getRotateInstance(
-				(-Math.PI / 2), 0, 0);
-		Graphics2D newImageGraphics2d = (Graphics2D) newImage.getGraphics();
-		newImageGraphics2d.setTransform(affineTransform);
-		newImageGraphics2d.drawImage(
-			srcImage, -width, 0, null);
-	//	newImageGraphics2d.drawImage(srcImage, affineTransform, null);
-
-		newImageGraphics2d.dispose();
-		return newImage;
-	}
-
-	/**
-	 * 入力された幅・高さ値を、アスペクト比を保ちつつ、指定された最大幅・高さ以内に縮小した値に変換し返す。
-	 * @param maxWidth 最大幅
-	 * @param maxHeight 最大高さ
-	 * @param width 入力幅
-	 * @param height 入力高さ
-	 * @return 最大幅・高さ以内に縮小された幅・高さ値
-	 */
-	private Dimension getScaledDimension(
-		int maxWidth,
-		int maxHeight,
-		int width,
-		int height) {
-		
-		// 幅・高さそれぞれの入力値と最大値の比率を取得する
-		double widthScale = (double) maxWidth / (double) width;
-		double heightScale = (double) maxHeight / (double) height;
-		// 幅・高さそれぞれの比率のうち小さい方を共通の縮小率として採用
-		double scale = widthScale >= heightScale ? heightScale : widthScale;
-		// 共通の縮小率で幅・高さの縮小値を算出
-		int scaledWidth = (int) ((double) width * scale);
-		int scaledHeight = (int) ((double) height * scale);
-		// 縮小済みの幅・高さをDimensionインスタンスとして返却
-		return new Dimension(scaledWidth, scaledHeight);
-	}
-
-	private BufferedImage resize(BufferedImage srcImage, int width, int height) {
-		BufferedImage newImage = new BufferedImage(width, height, srcImage
-				.getType());
-		Graphics newImageGraphics = newImage.getGraphics();
-		newImageGraphics.drawImage(srcImage
-				.getScaledInstance(width, height, 16), 0, 0, width, height,
-				null);
-		newImageGraphics.dispose();
-		return newImage;
-	}
 
 	private File writeJpegFile(BufferedImage inputBufferedImage,
 			String outputFileName, int compressionQualityPercentage)
@@ -408,41 +287,6 @@ public class EntryPoint {
 	}
 	
 	
-	private File[] inflate(File targetZipFile, File outputDirectory) throws IOException {
-		List outputFileList = new ArrayList();
-		
-		ZipFile zipFile = new ZipFile(targetZipFile, "MS932");
-		Enumeration zipEntries = zipFile.getEntries();
-		while (zipEntries.hasMoreElements()) {
-			ZipArchiveEntry zipEntry = (ZipArchiveEntry)zipEntries.nextElement();
-			if (! zipEntry.isDirectory()) {
-				if (zipEntry.getName().toLowerCase().endsWith("jpg") ||
-					zipEntry.getName().toLowerCase().endsWith("jpeg")) {
-					
-					String outputFileName =
-						zipEntry.getName().substring(
-							zipEntry.getName().lastIndexOf("/") + 1);
-					
-					File outputFile = new File(outputDirectory, outputFileName);
-					outputFileList.add(outputFile);
-					FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-					
-					InputStream inputStream = zipFile.getInputStream(zipEntry);
-					byte[] buffer = new byte[1024];
-					int readSize;
-					while ((readSize = inputStream.read(buffer)) != -1) {
-						fileOutputStream.write(buffer, 0, readSize);
-					}
-					
-					inputStream.close();
-					fileOutputStream.close();
-				}
-			}
-		}
-		
-		return (File[])outputFileList.toArray(new File[0]);
-	}
-
 	public static void main(String args[]) {
 		// デフォルトリターンコード＝１
 		int returnCode = Constants.RETURN_CODE_ERROR;
