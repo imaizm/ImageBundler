@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
@@ -306,7 +307,7 @@ public class EntryPoint {
 		//
 		// 対象ファイルの取得
 		//
-		String filePath;
+		List<File> targetFileList = new LinkedList<File>();
 		
 		// 引数にて対象ファイルの指定がなかった場合
 		if (args.length == 0) {
@@ -319,6 +320,7 @@ public class EntryPoint {
 			
 			JFileChooser jFileChooser = new JFileChooser();
 			jFileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+			jFileChooser.setMultiSelectionEnabled(true);
 			
 			if (currentDirectoryForJFileChooser != null) {
 				jFileChooser.setCurrentDirectory(currentDirectoryForJFileChooser);
@@ -326,8 +328,10 @@ public class EntryPoint {
 			
 			int state = jFileChooser.showOpenDialog(null);
 			if (state == JFileChooser.APPROVE_OPTION) {
-				filePath = jFileChooser.getSelectedFile().getAbsolutePath();
-				parentDirectoryOfSelectedFile = jFileChooser.getSelectedFile().getParent();
+				for(File targetFile : jFileChooser.getSelectedFiles()) {
+					targetFileList.add(targetFile);
+					parentDirectoryOfSelectedFile = targetFile.getParent();
+				}
 			} else {
 				return returnCode;
 			}
@@ -336,35 +340,39 @@ public class EntryPoint {
 			
 		// 引数にて対象ファイルの指定があった場合
 		} else if (args.length == 1) {
-			filePath = args[0];
-		
+			String filePath = args[0];
+			File inputFile = new File(filePath);
+			if (!inputFile.exists()) {
+				System.out.println("エラー：指定されたファイル/フォルダが存在しません。");
+				return returnCode;
+			}
+			targetFileList.add(inputFile);
 		// 引数の指定に誤りがある場合
 		} else {
 			System.out.println("エラー：引数が指定されていません。");
 			return returnCode;
 		}
 
-		File inputFile = new File(filePath);
-		if (!inputFile.exists()) {
-			System.out.println("エラー：指定されたファイル/フォルダが存在しません。");
-			return returnCode;
-		}
 		try {
-			System.out.println("input file info...");
-			System.out.println("File#getAbsoluteFile (src)  : " + inputFile.getAbsoluteFile());
-		//	System.out.println("File#getAbsolutePath  : " + inputFile.getAbsolutePath());
-		//	System.out.println("File#getCanonicalFile : " + inputFile.getCanonicalFile());
-		//	System.out.println("File#getCanonicalPath : " + inputFile.getCanonicalPath());
-		//	System.out.println("File#getName          : " + inputFile.getName());
-		//	System.out.println("File#getParent        : " + inputFile.getParent());
-		//	System.out.println("File#getParentFile    : " + inputFile.getParentFile());
-		//	System.out.println("File#getPath          : " + inputFile.getPath());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return returnCode;
 		}
 		EntryPoint converter = new EntryPoint();
-		converter.convert(inputFile, 768, 1024);
+		for (File targetFile : targetFileList) {
+			System.out.println("input file info...");
+			System.out.println("File#getAbsoluteFile (src)  : " + targetFile.getAbsoluteFile());
+		//	System.out.println("File#getAbsolutePath  : " + targetFile.getAbsolutePath());
+		//	System.out.println("File#getCanonicalFile : " + targetFile.getCanonicalFile());
+		//	System.out.println("File#getCanonicalPath : " + targetFile.getCanonicalPath());
+		//	System.out.println("File#getName          : " + targetFile.getName());
+		//	System.out.println("File#getParent        : " + targetFile.getParent());
+		//	System.out.println("File#getParentFile    : " + targetFile.getParentFile());
+		//	System.out.println("File#getPath          : " + targetFile.getPath());
+			
+			converter.convert(targetFile, 768, 1024);
+		}
+		returnCode = Constants.RETURN_CODE_NORMAL;
 		return returnCode;
 	}
 }
