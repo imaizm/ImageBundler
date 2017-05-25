@@ -14,7 +14,7 @@ public class InputFileHandler {
 	private File extractDirectory;
 	private File[] extractedFiles;
 	
-	public InputFileHandler(File inputFile, File workDirectory) throws IOException {
+	public InputFileHandler(File inputFile) throws IOException {
 		// 入力ソースの拡張子を取得
 		String inputFileExtension =
 			inputFile.getName().substring(inputFile.getName().length() - 3, inputFile.getName().length());
@@ -22,8 +22,6 @@ public class InputFileHandler {
 		// 入力ソースがディレクトリだった場合
 		if (inputFile.isDirectory()) {
 			
-			System.out.println("work directory : " + workDirectory.getAbsolutePath());
-
 			// 入力ソースのディレクトリからJpegファイルを取得
 			this.inputFiles = inputFile.listFiles(
 				new FileFilter() {
@@ -42,13 +40,12 @@ public class InputFileHandler {
 		// 入力ソースがZipファイルだった場合
 		} else if (inputFileExtension.equalsIgnoreCase("zip")) {
 			
-			// 解答用仮ディレクトリの作成
-			this.extractDirectory = new File(workDirectory.getPath() + "_extract");
-			this.extractDirectory.mkdir();
+			// 解凍用仮ディレクトリの作成
+			this.extractDirectory = (new WorkDirectoryHandler()).getWorkDirectory();
 			
 			// 入力ソースのZipファイルを解凍し、解凍されたファイル群からJpegファイルを取得
 			try {
-				this.extractedFiles = ZipFileHandler.inflate(inputFile, extractDirectory);
+				this.extractedFiles = ZipFileHandler.inflate(inputFile, this.extractDirectory);
 			} catch (IOException e) {
 				throw e;
 			}

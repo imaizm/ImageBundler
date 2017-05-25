@@ -25,3 +25,6 @@ hs_err_pid*
 
 # Mac work file
 .DS_Store
+
+# debug output
+/ImageBundler.ini

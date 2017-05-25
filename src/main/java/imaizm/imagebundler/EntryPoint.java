@@ -1,34 +1,17 @@
 package imaizm.imagebundler;
 
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.CRC32;
-import java.util.zip.CheckedInputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -38,50 +21,23 @@ import javax.imageio.stream.ImageOutputStream;
 import javax.swing.JFileChooser;
 import javax.swing.ProgressMonitor;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.io.FilenameUtils;
+
 public class EntryPoint {
-	/** 作業用ディレクトリのパスを格納 */
-	private String tempDirectoryPath;
-	/** 作業量ディレクトリに作成する仮ディレクトリのディレクトリ名を格納 */
-	private String workDirectoryName;
-	/** 仮ディレクトリ操作用のFileオブジェクト*/
-	private File workDirectory;
 
 	/**
 	 * デフォルトコンストラクタ
 	 */
 	public EntryPoint() {
-		
-		// 作業ディレクトリ：実行時OSのTEMPディレクトリを取得
-		tempDirectoryPath = System.getProperty("java.io.tmpdir");
-		// 仮ディレクトリ：日時＋乱数５桁
-		workDirectoryName = 
-			(new SimpleDateFormat("yyyyMMddHHmmss")).format(new Date()) +
-			(new DecimalFormat("#####")).format((int) (Math.random() * 100000D));
-		// 仮ディレクトリ操作用Fileオブジェクト
-		workDirectory = new File(tempDirectoryPath + File.separator + workDirectoryName);
-		// 仮ディレクトリの作成
-		workDirectory.mkdir();
-		
-		try {
-			System.out.println("input file info...");
-			System.out.println("File#getAbsoluteFile (work) : " + workDirectory.getAbsoluteFile());
-		//	System.out.println("File#getAbsolutePath  : " + workDirectory.getAbsolutePath());
-		//	System.out.println("File#getCanonicalFile : " + workDirectory.getCanonicalFile());
-		//	System.out.println("File#getCanonicalPath : " + workDirectory.getCanonicalPath());
-		//	System.out.println("File#getName          : " + workDirectory.getName());
-		//	System.out.println("File#getParent        : " + workDirectory.getParent());
-		//	System.out.println("File#getParentFile    : " + workDirectory.getParentFile());
-		//	System.out.println("File#getPath          : " + workDirectory.getPath());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	public void convert(File inputFile, int width, int height)
 		throws IOException {
 		
 		InputFileHandler inputFileHandler =
-			new InputFileHandler(inputFile, this.workDirectory);
+			new InputFileHandler(inputFile);
 		
 		convert(inputFile, inputFileHandler.getInputFiles(), width, height);
 		
@@ -96,8 +52,7 @@ public class EntryPoint {
 
 				System.out.println("output zip file name : " + outputZipFileName);
 
-				File outputZipFile =
-					store(inputFileHandler.getInputFiles(), outputZipFileName);
+				store(inputFileHandler.getInputFiles(), outputZipFileName);
 		}
 		
 		inputFileHandler.close();
@@ -105,9 +60,11 @@ public class EntryPoint {
 	
 	private void convert(File inputFile, File[] inputFiles, int width, int height) throws IOException {
 		
-		ArrayList outputFileList = new ArrayList();
-		int index = 1;
-		DecimalFormat decimalFormat = createDecimalFormatObject(inputFiles.length);
+		File workDirectory = (new WorkDirectoryHandler()).getWorkDirectory();
+		
+		ArrayList<File> outputFileList = new ArrayList<File>();
+//		int index = 1;
+//		DecimalFormat decimalFormat = createDecimalFormatObject(inputFiles.length);
 		
 		// 処理中ダイアログ
 		ProgressMonitor progressMonitor = new ProgressMonitor(null, "変換処理中", "ノート", 0, inputFiles.length);
@@ -127,7 +84,9 @@ public class EntryPoint {
 				String outputFileName = 
 					workDirectory.getAbsolutePath() +
 					File.separator +
-					inputFiles[i].getName();
+					FilenameUtils.getBaseName(
+						inputFiles[i].getName()) +
+					".jpg";
 //					inputFile.getName() +
 //					"_" +
 //					decimalFormat.format(index++) + ".jpg";
@@ -157,16 +116,16 @@ public class EntryPoint {
 
 		System.out.println("output zip file name : " + outputZipFileName);
 
-		File outputZipFile =
-			store((File[])outputFileList.toArray(new File[0]), outputZipFileName);
+		store((File[])outputFileList.toArray(new File[0]), outputZipFileName);
 		
 		// 一時ファイルを削除
-		for (Iterator it=outputFileList.iterator(); it.hasNext();) {
-			((File)it.next()).delete();
+		for (Iterator<File> it=outputFileList.iterator(); it.hasNext();) {
+			it.next().delete();
 		}
 		workDirectory.delete();
 	}
 
+/*
 	private DecimalFormat createDecimalFormatObject(int length) {
 		int digit = String.valueOf(length).length();
 		StringBuffer formatStringBuffer = new StringBuffer();
@@ -177,7 +136,7 @@ public class EntryPoint {
 				.toString());
 		return decimalFormat;
 	}
-
+*/
 
 	private File writeJpegFile(BufferedImage inputBufferedImage,
 			String outputFileName, int compressionQualityPercentage)
@@ -187,12 +146,12 @@ public class EntryPoint {
 		ImageWriter imageWriter;
 		ImageWriteParam imageWriteParam;
 		for (
-			Iterator imageWriters = ImageIO.getImageWritersByFormatName("jpg");
+			Iterator<ImageWriter> imageWriters = ImageIO.getImageWritersByFormatName("jpg");
 			imageWriters.hasNext();
 			imageWriter.write(null, new IIOImage(inputBufferedImage, null, null), imageWriteParam)) {
 			ImageOutputStream imageOutputStream =
 				ImageIO.createImageOutputStream(outputFile);
-			imageWriter = (ImageWriter) imageWriters.next();
+			imageWriter = imageWriters.next();
 			imageWriter.setOutput(imageOutputStream);
 			imageWriteParam = imageWriter.getDefaultWriteParam();
 			imageWriteParam.setCompressionMode(2);
@@ -251,6 +210,7 @@ public class EntryPoint {
 		return outputFile;
 	}
 	
+/*
 	private File deflate(File targetFiles[], String outputFileName)
 			throws IOException {
 		File outputFile = new File(outputFileName);
@@ -286,7 +246,7 @@ public class EntryPoint {
 		zipOutputStream.close();
 		return outputFile;
 	}
-	
+*/
 	
 	public static void main(String args[]) {
 		// デフォルトリターンコード＝１
@@ -353,11 +313,6 @@ public class EntryPoint {
 			return returnCode;
 		}
 
-		try {
-		} catch (Exception e) {
-			e.printStackTrace();
-			return returnCode;
-		}
 		EntryPoint converter = new EntryPoint();
 		for (File targetFile : targetFileList) {
 			System.out.println("input file info...");
