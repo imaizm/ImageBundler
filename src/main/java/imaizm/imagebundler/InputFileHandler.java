@@ -29,6 +29,7 @@ public class InputFileHandler {
 						if (file.isFile() && (
 								file.getName().toLowerCase().endsWith("jpg") ||
 								file.getName().toLowerCase().endsWith("jpeg") ||
+//								file.getName().toLowerCase().endsWith("gif") ||
 								file.getName().toLowerCase().endsWith("png"))) {
 							return true;
 						} else {

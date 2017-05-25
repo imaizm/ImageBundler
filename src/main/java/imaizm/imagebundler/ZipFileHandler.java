@@ -13,12 +13,13 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 
 public class ZipFileHandler {
 	public static File[] inflate(File targetZipFile, File outputDirectory) throws IOException {
-		List outputFileList = new ArrayList();
+		List<File> outputFileList = new ArrayList<File>();
 		
 		ZipFile zipFile = new ZipFile(targetZipFile, "MS932");
-		Enumeration zipEntries = zipFile.getEntries();
+		Enumeration<ZipArchiveEntry> zipEntries = zipFile.getEntries();
 		while (zipEntries.hasMoreElements()) {
-			ZipArchiveEntry zipEntry = (ZipArchiveEntry)zipEntries.nextElement();
+			
+			ZipArchiveEntry zipEntry = zipEntries.nextElement();
 			if (! zipEntry.isDirectory()) {
 				if (zipEntry.getName().toLowerCase().endsWith("jpg") ||
 					zipEntry.getName().toLowerCase().endsWith("jpeg")) {
@@ -43,8 +44,9 @@ public class ZipFileHandler {
 				}
 			}
 		}
+		zipFile.close();
 		
-		return (File[])outputFileList.toArray(new File[0]);
+		return outputFileList.toArray(new File[0]);
 	}
 
 }

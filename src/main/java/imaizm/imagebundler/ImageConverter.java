@@ -16,7 +16,8 @@ public class ImageConverter {
 		ROTATE
 	}
 	
-	public static List<BufferedImage> convert(BufferedImage srcImage, int width, int height, ContraAspectMode mode) {
+	public static List<BufferedImage> convert(
+		BufferedImage srcImage, int width, int height, ContraAspectMode mode) {
 		
 		LinkedList<BufferedImage> bufferedImageList = new LinkedList<BufferedImage>();
 		
@@ -46,7 +47,7 @@ public class ImageConverter {
 				
 				int temp = width;
 				width = height;
-				height = width;
+				height = temp;
 				
 				bufferedImageList.add(srcImage);
 			} else {
@@ -74,8 +75,6 @@ public class ImageConverter {
 		int width = srcImage.getWidth();
 		int height = srcImage.getHeight();
 		BufferedImage newImage = new BufferedImage(height, width, srcImage.getType());
-		double x = (double)width / 2D;
-		double y = (double)height / 2D;
 		AffineTransform affineTransform =
 			AffineTransform.getRotateInstance(
 				(-Math.PI / 2), 0, 0);
@@ -83,7 +82,6 @@ public class ImageConverter {
 		newImageGraphics2d.setTransform(affineTransform);
 		newImageGraphics2d.drawImage(
 			srcImage, -width, 0, null);
-	//	newImageGraphics2d.drawImage(srcImage, affineTransform, null);
 
 		newImageGraphics2d.dispose();
 		return newImage;
@@ -116,13 +114,16 @@ public class ImageConverter {
 	}
 
 	private static BufferedImage resize(BufferedImage srcImage, int width, int height) {
-		BufferedImage newImage = new BufferedImage(width, height, srcImage
-				.getType());
+		
+		BufferedImage newImage =
+			new BufferedImage(width, height, srcImage.getType());
+
 		Graphics newImageGraphics = newImage.getGraphics();
-		newImageGraphics.drawImage(srcImage
-				.getScaledInstance(width, height, 16), 0, 0, width, height,
-				null);
+		newImageGraphics.drawImage(
+			srcImage.getScaledInstance(width, height, 16),
+			0, 0, width, height, null);
 		newImageGraphics.dispose();
+		
 		return newImage;
 	}
 

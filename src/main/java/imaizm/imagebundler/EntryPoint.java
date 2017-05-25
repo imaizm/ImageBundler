@@ -41,20 +41,20 @@ public class EntryPoint {
 		InputFileHandler inputFileHandler =
 			new InputFileHandler(inputFile);
 		
-		convert(inputFile, inputFileHandler.getInputFiles(), width, height);
+		this.convert(inputFile, inputFileHandler.getInputFiles(), width, height);
 		
 		// 入力ソースがディレクトリだった場合
 		if (inputFile.isDirectory()) {
 			
 			String outputZipFileName =
-					inputFile.getParent() +
-					File.separator +
-					inputFile.getName() +
-					".zip";
+				inputFile.getParent() +
+				File.separator +
+				inputFile.getName() +
+				".zip";
 
-				System.out.println("output zip file name : " + outputZipFileName);
+			System.out.println("output zip file name : " + outputZipFileName);
 
-				store(inputFileHandler.getInputFiles(), outputZipFileName);
+			this.store(inputFileHandler.getInputFiles(), outputZipFileName);
 		}
 		
 		inputFileHandler.close();
@@ -65,18 +65,14 @@ public class EntryPoint {
 		File workDirectory = (new WorkDirectoryHandler()).getWorkDirectory();
 		
 		ArrayList<File> outputFileList = new ArrayList<File>();
-//		int index = 1;
-//		DecimalFormat decimalFormat = createDecimalFormatObject(inputFiles.length);
 		
 		// 処理中ダイアログ
-		ProgressMonitor progressMonitor = new ProgressMonitor(null, "変換処理中", "ノート", 0, inputFiles.length);
+		ProgressMonitor progressMonitor = new ProgressMonitor(null, "変換中 : " + inputFile.getName(), "ノート", 0, inputFiles.length);
 		progressMonitor.setMillisToDecideToPopup(0);
 		
 		for (int i = 0; i < inputFiles.length; i++) {
 			
 			progressMonitor.setNote((i+1) + " of " + inputFiles.length);
-			
-		//	System.out.println((i + 1) + " of " + inputFiles.length);
 
 			BufferedImage bufferedImage = ImageIO.read(inputFiles[i]);
 			if (bufferedImage != null) {
@@ -103,15 +99,8 @@ public class EntryPoint {
 			progressMonitor.setProgress(i+1);
 		}
 
-		String inputFileName;
-		if (inputFile.isFile()) {
-			inputFileName =
-				inputFile.getName().substring(
-					0,
-					inputFile.getName().lastIndexOf("."));
-		} else {
-			inputFileName = inputFile.getName();
-		}
+		// 拡張子を除去
+		String inputFileName = FilenameUtils.getBaseName(inputFile.getName());
 		
 		String outputZipFileName =
 			inputFile.getParent() +
@@ -121,7 +110,7 @@ public class EntryPoint {
 
 		System.out.println("output zip file name : " + outputZipFileName);
 
-		store((File[])outputFileList.toArray(new File[0]), outputZipFileName);
+		this.store((File[])outputFileList.toArray(new File[0]), outputZipFileName);
 		
 		// 一時ファイルを削除
 		for (Iterator<File> it=outputFileList.iterator(); it.hasNext();) {
@@ -143,17 +132,22 @@ public class EntryPoint {
 	}
 */
 
-	private File writeJpegFile(BufferedImage inputBufferedImage,
-			String outputFileName, int compressionQualityPercentage)
-			throws IOException {
+	private File writeJpegFile(
+		BufferedImage inputBufferedImage,
+		String outputFileName,
+		int compressionQualityPercentage)
+		throws IOException {
+		
 		File outputFile = new File(outputFileName);
 		float compressionQuality = (float) compressionQualityPercentage / 100F;
 		ImageWriter imageWriter;
 		ImageWriteParam imageWriteParam;
+		
 		for (
 			Iterator<ImageWriter> imageWriters = ImageIO.getImageWritersByFormatName("jpg");
 			imageWriters.hasNext();
 			imageWriter.write(null, new IIOImage(inputBufferedImage, null, null), imageWriteParam)) {
+			
 			ImageOutputStream imageOutputStream =
 				ImageIO.createImageOutputStream(outputFile);
 			imageWriter = imageWriters.next();
@@ -167,7 +161,8 @@ public class EntryPoint {
 	}
 
 	private File store(File targetFiles[], String outputFileName)
-			throws IOException {
+		throws IOException {
+		
 		File outputFile = new File(outputFileName);
 		ZipArchiveOutputStream zipOutputStream =
 			new ZipArchiveOutputStream(
@@ -175,7 +170,9 @@ public class EntryPoint {
 					new FileOutputStream(outputFile)));
 		zipOutputStream.setMethod(ZipArchiveOutputStream.STORED);
 		zipOutputStream.setEncoding("MS932");
+		
 		for (int i = 0; i < targetFiles.length; i++) {
+			
 			File targetFile = targetFiles[i];
 			ZipArchiveEntry zipEntry = new ZipArchiveEntry(targetFile.getName());
 			zipEntry.setTime(targetFile.lastModified());
@@ -214,44 +211,6 @@ public class EntryPoint {
 		zipOutputStream.close();
 		return outputFile;
 	}
-	
-/*
-	private File deflate(File targetFiles[], String outputFileName)
-			throws IOException {
-		File outputFile = new File(outputFileName);
-		ZipArchiveOutputStream zipOutputStream = new ZipArchiveOutputStream(
-				new BufferedOutputStream(new FileOutputStream(outputFile)));
-		zipOutputStream.setLevel(0);
-		zipOutputStream.setMethod(ZipArchiveOutputStream.STORED);
-		zipOutputStream.setEncoding("MS932");
-		for (int i = 0; i < targetFiles.length; i++) {
-			File targetFile = targetFiles[i];
-			ZipArchiveEntry zipEntry = new ZipArchiveEntry(targetFile.getName());
-			zipEntry.setTime(targetFile.lastModified());
-			zipEntry.setSize(targetFile.length());
-			zipEntry.setCrc(0L);
-			zipOutputStream.putArchiveEntry(zipEntry);
-			CRC32 crc = new CRC32();
-			CheckedInputStream checkedInputStream =
-				new CheckedInputStream(
-					new FileInputStream(targetFile), crc);
-			long sizeResult = 0L;
-			byte buffer[] = new byte[4096];
-			for (int readSize = 0; (readSize = checkedInputStream.read(buffer)) > 0;) {
-				sizeResult += readSize;
-				zipOutputStream.write(buffer, 0, readSize);
-			}
-
-			checkedInputStream.close();
-			zipEntry.setCompressedSize(sizeResult);
-			zipEntry.setCrc(crc.getValue());
-			zipOutputStream.closeArchiveEntry();
-		}
-
-		zipOutputStream.close();
-		return outputFile;
-	}
-*/
 	
 	public static void main(String args[]) {
 		// デフォルトリターンコード＝１
@@ -318,8 +277,17 @@ public class EntryPoint {
 			return returnCode;
 		}
 
+		// 処理中ダイアログ
+		ProgressMonitor progressMonitor = new ProgressMonitor(null, "全体進捗", "ノート", 0, targetFileList.size());
+		progressMonitor.setMillisToDecideToPopup(0);
+		
 		EntryPoint converter = new EntryPoint();
-		for (File targetFile : targetFileList) {
+		for (int i=0; i<targetFileList.size(); i++) {
+			
+			progressMonitor.setNote((i+1) + " of " + targetFileList.size());
+			
+			File targetFile = targetFileList.get(i);
+			
 			System.out.println("input file info...");
 			System.out.println("File#getAbsoluteFile (src)  : " + targetFile.getAbsoluteFile());
 		//	System.out.println("File#getAbsolutePath  : " + targetFile.getAbsolutePath());
@@ -331,6 +299,8 @@ public class EntryPoint {
 		//	System.out.println("File#getPath          : " + targetFile.getPath());
 			
 			converter.convert(targetFile, 768, 1024);
+			
+			progressMonitor.setProgress(i+1);
 		}
 		returnCode = Constants.RETURN_CODE_NORMAL;
 		return returnCode;
