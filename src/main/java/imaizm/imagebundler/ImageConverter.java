@@ -5,33 +5,69 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.util.LinkedList;
+import java.util.List;
 
 public class ImageConverter {
-	public static BufferedImage convert(BufferedImage srcImage, int width, int height) {
+	
+	public static enum ContraAspectMode {
+		PLAIN,
+		SPLIT,
+		ROTATE
+	}
+	
+	public static List<BufferedImage> convert(BufferedImage srcImage, int width, int height, ContraAspectMode mode) {
+		
+		LinkedList<BufferedImage> bufferedImageList = new LinkedList<BufferedImage>();
 		
 		if (width > height && srcImage.getWidth() < srcImage.getHeight() ||
 			width < height && srcImage.getWidth() > srcImage.getHeight()) {
 			
 			// TODO 暫定的にモード固定
-			if (true) {
+			if (mode == ContraAspectMode.SPLIT) {
+				
+				if (width > height) {
+					int halfValue = srcImage.getHeight() / 2;
+					int offsetValue = (srcImage.getHeight() % 2 == 0) ? 0 : 1;
+					
+					bufferedImageList.add(srcImage.getSubimage(0, 0, srcImage.getWidth(), halfValue));
+					bufferedImageList.add(srcImage.getSubimage(0, halfValue, srcImage.getWidth(), halfValue + offsetValue));
+				} else {
+					int halfValue = srcImage.getWidth() / 2;
+					int offsetValue = (srcImage.getWidth() % 2 == 0) ? 0 : 1;
+					
+					bufferedImageList.add(srcImage.getSubimage(0, 0, halfValue, srcImage.getHeight()));
+					bufferedImageList.add(srcImage.getSubimage(halfValue, 0, halfValue + offsetValue, srcImage.getHeight()));
+				}
+				
+				
+			} else if (mode == ContraAspectMode.PLAIN) {
 				// 最大幅・高さ入れ替えモード
 				
 				int temp = width;
 				width = height;
 				height = width;
+				
+				bufferedImageList.add(srcImage);
 			} else {
 				// 画像回転モード
 				
 				// 画像を1/4回転
 				srcImage = rotate(srcImage);
+				
+				bufferedImageList.add(srcImage);
 			}
+		} else {
+			bufferedImageList.add(srcImage);
 		}
 
-		// 縮小後の幅・高さ値を取得
-		Dimension dimension = getScaledDimension(width, height, srcImage.getWidth(), srcImage.getHeight());
-		srcImage = resize(srcImage, dimension.width, dimension.height);
+		for (BufferedImage bufferedImage : bufferedImageList) {
+			// 縮小後の幅・高さ値を取得
+			Dimension dimension = getScaledDimension(width, height, bufferedImage.getWidth(), bufferedImage.getHeight());
+			bufferedImage = resize(bufferedImage, dimension.width, dimension.height);
+		}
 		
-		return srcImage;
+		return bufferedImageList;
 	}
 
 	private static BufferedImage rotate(BufferedImage srcImage) {

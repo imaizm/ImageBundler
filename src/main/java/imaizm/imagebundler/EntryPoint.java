@@ -25,6 +25,8 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.FilenameUtils;
 
+import imaizm.imagebundler.ImageConverter.ContraAspectMode;
+
 public class EntryPoint {
 
 	/**
@@ -79,20 +81,23 @@ public class EntryPoint {
 			BufferedImage bufferedImage = ImageIO.read(inputFiles[i]);
 			if (bufferedImage != null) {
 				
-				bufferedImage = ImageConverter.convert(bufferedImage, width, height);
+				List<BufferedImage> convertedImageList = ImageConverter.convert(bufferedImage, width, height, ContraAspectMode.SPLIT);
 				
-				String outputFileName = 
-					workDirectory.getAbsolutePath() +
-					File.separator +
-					FilenameUtils.getBaseName(
-						inputFiles[i].getName()) +
-					".jpg";
-//					inputFile.getName() +
-//					"_" +
-//					decimalFormat.format(index++) + ".jpg";
-				File outputFile = writeJpegFile(bufferedImage,
-						outputFileName, 75);
-				outputFileList.add(outputFile);
+				int index = 0;
+				for (BufferedImage convertedImage : convertedImageList) {
+					index++;
+					
+					String outputFileName = 
+							workDirectory.getAbsolutePath() +
+							File.separator +
+							FilenameUtils.getBaseName(
+								inputFiles[i].getName()) +
+							((convertedImageList.size() == 1) ? "" : "_" + Integer.toString(index)) +
+							".jpg";
+						File outputFile = writeJpegFile(convertedImage, outputFileName, 75);
+						outputFileList.add(outputFile);
+				}
+				
 			}
 			
 			progressMonitor.setProgress(i+1);
