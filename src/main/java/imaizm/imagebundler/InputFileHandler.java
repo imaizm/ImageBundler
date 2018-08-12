@@ -47,6 +47,7 @@ public class InputFileHandler {
 			// 入力ソースのZipファイルを解凍し、解凍されたファイル群からJpegファイルを取得
 			try {
 				this.extractedFiles = ZipFileHandler.inflate(inputFile, this.extractDirectory);
+				this.inputFiles = this.extractedFiles;
 			} catch (IOException e) {
 				throw e;
 			}
@@ -61,6 +62,8 @@ public class InputFileHandler {
 	
 	public void close() {
 		if (this.extractedFiles != null) {
+			this.inputFiles = null;
+			
 			// 処理済みの解凍ファイルを削除
 			for (int i=0; i<this.extractedFiles.length; i++) {
 				this.extractedFiles[i].delete();
