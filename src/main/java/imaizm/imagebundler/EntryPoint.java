@@ -1,5 +1,8 @@
 package imaizm.imagebundler;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -138,6 +141,11 @@ public class EntryPoint {
 		int compressionQualityPercentage)
 		throws IOException {
 		
+		// 変換元画像が透過情報を持っている場合、透過情報を白色に置き換える
+		if (inputBufferedImage.getColorModel().getTransparency() != Transparency.OPAQUE) {
+			inputBufferedImage = fillTransparentPixels(inputBufferedImage, Color.WHITE);
+		}
+		
 		File outputFile = new File(outputFileName);
 		float compressionQuality = (float) compressionQualityPercentage / 100F;
 		ImageWriter imageWriter;
@@ -160,6 +168,22 @@ public class EntryPoint {
 		return outputFile;
 	}
 
+	// 透過情報をfillColorに置き換えたBufferedImageを返却
+	private BufferedImage fillTransparentPixels(
+		BufferedImage inputBufferdImage, 
+		Color fillColor) {
+		int w = inputBufferdImage.getWidth();
+		int h = inputBufferdImage.getHeight();
+		BufferedImage outputBufferdImage =
+			new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = outputBufferdImage.createGraphics();
+		g.setColor(fillColor);
+		g.fillRect(0,0,w,h);
+		g.drawRenderedImage(inputBufferdImage, null);
+		g.dispose();
+		return outputBufferdImage;
+	}
+	
 	private File store(File targetFiles[], String outputFileName)
 		throws IOException {
 		
