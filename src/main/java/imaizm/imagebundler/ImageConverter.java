@@ -8,6 +8,8 @@ import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 import java.util.List;
 
+import imaizm.imagebundler.ImageConverter.ContraAspectMode;
+
 public class ImageConverter {
 	
 	public static enum ContraAspectMode {
@@ -16,15 +18,38 @@ public class ImageConverter {
 		ROTATE
 	}
 	
+	public static enum BindingSide {
+		RIGHT,
+		LEFT
+	}
+	
 	public static List<BufferedImage> convert(
-		BufferedImage srcImage, int width, int height, ContraAspectMode mode) {
+		BufferedImage srcImage,
+		int width,
+		int height) {
+		return convert(srcImage, width, height, BindingSide.RIGHT);
+	}
+	
+	public static List<BufferedImage> convert(
+		BufferedImage srcImage,
+		int width,
+		int height,
+		BindingSide side) {
+		return convert(srcImage, width, height, side, ContraAspectMode.SPLIT);
+	}
+		
+	public static List<BufferedImage> convert(
+		BufferedImage srcImage,
+		int width,
+		int height,
+		BindingSide side,
+		ContraAspectMode mode) {
 		
 		LinkedList<BufferedImage> bufferedImageList = new LinkedList<BufferedImage>();
 		
 		if (width > height && srcImage.getWidth() < srcImage.getHeight() ||
 			width < height && srcImage.getWidth() > srcImage.getHeight()) {
 			
-			// TODO 暫定的にモード固定
 			if (mode == ContraAspectMode.SPLIT) {
 				
 				if (width > height) {
@@ -37,8 +62,15 @@ public class ImageConverter {
 					int halfValue = srcImage.getWidth() / 2;
 					int offsetValue = (srcImage.getWidth() % 2 == 0) ? 0 : 1;
 					
-					bufferedImageList.add(srcImage.getSubimage(0, 0, halfValue, srcImage.getHeight()));
-					bufferedImageList.add(srcImage.getSubimage(halfValue, 0, halfValue + offsetValue, srcImage.getHeight()));
+					BufferedImage leftImage = srcImage.getSubimage(0, 0, halfValue, srcImage.getHeight());
+					BufferedImage rightImage = srcImage.getSubimage(halfValue, 0, halfValue + offsetValue, srcImage.getHeight());
+					if (side == BindingSide.RIGHT) {
+						bufferedImageList.add(rightImage);
+						bufferedImageList.add(leftImage);
+					} else {
+						bufferedImageList.add(leftImage);
+						bufferedImageList.add(rightImage);
+					}
 				}
 				
 				

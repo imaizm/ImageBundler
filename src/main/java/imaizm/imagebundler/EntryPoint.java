@@ -80,7 +80,7 @@ public class EntryPoint {
 			BufferedImage bufferedImage = ImageIO.read(inputFiles[i]);
 			if (bufferedImage != null) {
 				
-				List<BufferedImage> convertedImageList = ImageConverter.convert(bufferedImage, width, height, ContraAspectMode.SPLIT);
+				List<BufferedImage> convertedImageList = ImageConverter.convert(bufferedImage, width, height);
 				
 				int index = 0;
 				for (BufferedImage convertedImage : convertedImageList) {
