@@ -1,18 +1,24 @@
 package imaizm.imagebundler;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class IniFileHandler {
 	
-	private File iniFile;
-	private File workDirectoryOfLastTime;
+	private Path iniFilePath;
+	private Path workDirectoryPathOfLastTime;
 	
 	public File getWorkDirectoryOfLastTime() {
-		return this.workDirectoryOfLastTime;
+		return this.workDirectoryPathOfLastTime.toFile();
+	}
+	
+	public Path getWorkDirectoryPathOfLastTime() {
+		return this.workDirectoryPathOfLastTime;
 	}
 	
 	public IniFileHandler() throws IOException {
@@ -22,32 +28,23 @@ public class IniFileHandler {
 		
 		// ユーザディレクトリ直下からiniファイルを探す
 		String currentDirectoryPath = System.getProperty("user.dir");
-		String iniFileName = currentDirectoryPath + File.separator + Constants.APPLICATION_NAME + ".ini";
-		this.iniFile = new File(iniFileName);
+		this.iniFilePath = Paths.get(currentDirectoryPath, Constants.APPLICATION_NAME + ".ini");
 		
 		// iniファイルが存在した場合
-		if (iniFile.exists()) {
-			BufferedReader bufferedReader = null;
-			try {
-				bufferedReader = new BufferedReader(new FileReader(iniFile));
+		if (Files.exists(this.iniFilePath)) {
+			try (BufferedReader bufferedReader = Files.newBufferedReader(this.iniFilePath)) {
 				String line = bufferedReader.readLine();
 				if (line != null) {
-					this.workDirectoryOfLastTime = this.getCurrentDirectory(line);
+					this.workDirectoryPathOfLastTime = this.getCurrentDirectoryPath(line);
 				}
 			} catch (IOException e) {
 				throw e;
-			} finally {
-				try {
-					bufferedReader.close();
-				} catch (IOException e) {
-					throw e;
-				}
 			}
 		
 		// ImageConverterForPda.iniファイルが存在しない場合
 		} else {
 			// ユーザディレクトリにImageConverterForPda.iniファイルを作成する
-			this.iniFile.createNewFile();
+			Files.createFile(this.iniFilePath);
 		}
 		
 	}
@@ -55,40 +52,29 @@ public class IniFileHandler {
 	/**
 	 * path文字列に指定されたディレクトリパスを検証し、存在すればそのパスのFileオブジェクトを、
 	 * 存在しなければパスを一つづつ遡っていき、最初に発見した存在するパスのFileオブジェクトを返す。
-	 * @param path 存在の検証をするパス文字列
+	 * @param pathString 存在の検証をするパス文字列
 	 * @return 存在したパスのFileオブジェクト
 	 */
-	private File getCurrentDirectory(String path) {
-		
-		File fileForReturn = null;
-		
-		fileForReturn = new File(path);
-		if (! fileForReturn.exists()) {
-			
+	private Path getCurrentDirectoryPath(String pathString) {
+
+		Path pathForReturn = Paths.get(pathString);
+		if (Files.notExists(pathForReturn)) {
 			while (
-				fileForReturn != null &&
-				fileForReturn.exists() == false) {
-				fileForReturn = fileForReturn.getParentFile();
-			}
+				pathForReturn != null &&
+				Files.notExists(pathForReturn)) {
+				pathForReturn = pathForReturn.getParent();
+			}				
 		}
 		
-		return fileForReturn;
+		return pathForReturn;
 	}
 	
 	public void writeWorkDirectoryOfLastTime(String filePath) throws IOException {
-		PrintWriter printWriter = null;
-		try {
-			
-			printWriter = new PrintWriter(iniFile);
-			printWriter.print(filePath);
+		
+		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(this.iniFilePath)) {
+			bufferedWriter.write(filePath);
 		} catch (IOException e) {
 			throw e;
-		} finally {
-			try {
-				printWriter.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 		}
 		
 	}

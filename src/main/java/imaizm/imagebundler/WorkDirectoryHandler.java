@@ -1,9 +1,13 @@
 package imaizm.imagebundler;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
 
 public class WorkDirectoryHandler {
 
@@ -11,25 +15,25 @@ public class WorkDirectoryHandler {
 	private String tempDirectoryPath;
 	/** 作業量ディレクトリに作成する仮ディレクトリのディレクトリ名を格納 */
 	private String workDirectoryName;
-	/** 仮ディレクトリ操作用のFileオブジェクト*/
-	private File workDirectory;
+	/** 仮ディレクトリ操作用のPathオブジェクト*/
+	private Path workDirectoryPath;
 
-	public WorkDirectoryHandler() {
+	public WorkDirectoryHandler() throws IOException {
 		
 		// 作業ディレクトリ：実行時OSのTEMPディレクトリを取得
 		this.tempDirectoryPath = System.getProperty("java.io.tmpdir");
 		// 仮ディレクトリ：日時＋乱数５桁
 		this.workDirectoryName = 
-			(new SimpleDateFormat("yyyyMMddHHmmss")).format(new Date()) +
+			(DateTimeFormatter.ofPattern("yyyy/MM/dd").format(LocalDate.now())) +
 			(new DecimalFormat("#####")).format((int) (Math.random() * 100000D));
-		// 仮ディレクトリ操作用Fileオブジェクト
-		this.workDirectory = new File(tempDirectoryPath + File.separator + workDirectoryName);
+		
 		// 仮ディレクトリの作成
-		this.workDirectory.mkdir();
+		this.workDirectoryPath = Files.createDirectory(Paths.get(tempDirectoryPath, workDirectoryName));
 		
 		try {
 			System.out.println("input file info...");
-			System.out.println("File#getAbsoluteFile (work) : " + workDirectory.getAbsoluteFile());
+			System.out.println("File#getAbsoluteFile (work) : " + this.workDirectoryPath.toAbsolutePath().toString());
+		//	System.out.println("File#getAbsoluteFile (work) : " + this.getWorkDirectory().getAbsoluteFile());
 		//	System.out.println("File#getAbsolutePath  : " + workDirectory.getAbsolutePath());
 		//	System.out.println("File#getCanonicalFile : " + workDirectory.getCanonicalFile());
 		//	System.out.println("File#getCanonicalPath : " + workDirectory.getCanonicalPath());
@@ -43,6 +47,10 @@ public class WorkDirectoryHandler {
 	}
 	
 	public File getWorkDirectory() {
-		return this.workDirectory;
+		return this.workDirectoryPath.toFile();
+	}
+	
+	public Path getWorkDirectoryPath() {
+		return this.workDirectoryPath;
 	}
 }

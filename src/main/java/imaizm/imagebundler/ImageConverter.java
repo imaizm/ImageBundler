@@ -8,8 +8,6 @@ import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 import java.util.List;
 
-import imaizm.imagebundler.ImageConverter.ContraAspectMode;
-
 public class ImageConverter {
 	
 	public static enum ContraAspectMode {
