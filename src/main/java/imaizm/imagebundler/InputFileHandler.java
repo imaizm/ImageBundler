@@ -26,43 +26,21 @@ public class InputFileHandler {
 	
 	public InputFileHandler(Path inputFilePath) throws IOException {
 		
-		PathMatcher pmZip = FileSystems.getDefault().getPathMatcher("glob:*.zip");
-		PathMatcher pmJpg = FileSystems.getDefault().getPathMatcher("glob:*.jpg");
-		PathMatcher pmJpeg = FileSystems.getDefault().getPathMatcher("glob:*.jpeg");
-		PathMatcher pmPng = FileSystems.getDefault().getPathMatcher("glob:*.png");
+		PathMatcher pmZip = FileSystems.getDefault().getPathMatcher("glob:**.zip");
+		PathMatcher pmJpg = FileSystems.getDefault().getPathMatcher("glob:**.jpg");
+		PathMatcher pmJpeg = FileSystems.getDefault().getPathMatcher("glob:**.jpeg");
+		PathMatcher pmPng = FileSystems.getDefault().getPathMatcher("glob:**.png");
 		
 		// 入力ソースがディレクトリだった場合
 		if (Files.isDirectory(inputFilePath)) {
 			
 			// 入力ソースのディレクトリからJpegファイルを取得
-			/*
-			this.inputFiles = inputFile.listFiles(
-				new FileFilter() {
-					public boolean accept(File file) {
-						if (file.isFile() && (
-								file.getName().toLowerCase().endsWith("jpg") ||
-								file.getName().toLowerCase().endsWith("jpeg") ||
-//								file.getName().toLowerCase().endsWith("gif") ||
-								file.getName().toLowerCase().endsWith("png"))) {
-							return true;
-						} else {
-							return false;
-						}
-					}
-				});
-			*/
 			this.inputFilePathList = Files.list(inputFilePath)
 				.filter(listFilePath -> (!Files.isDirectory(listFilePath))
 					&& (pmJpg.matches(listFilePath) ||
 						pmJpeg.matches(listFilePath) ||
 						pmPng.matches(listFilePath)))
 				.collect(Collectors.toList());
-			/*
-			this.inputFiles = this.inputFilePathList
-				.stream()
-				.map(Path::toFile)
-				.toArray(File[]::new);
-			*/
 
 		// 入力ソースがZipファイルだった場合
 		} else if (pmZip.matches(inputFilePath)) {
