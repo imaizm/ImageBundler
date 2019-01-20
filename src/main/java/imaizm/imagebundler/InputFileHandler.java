@@ -9,12 +9,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class InputFileHandler {
-	/*
-	private File[] inputFiles;
-	public File[] getInputFiles() {
-		return this.inputFiles;
-	}
-	*/
 	
 	private List<Path> inputFilePathList;
 	public List<Path> getInputFilePathList() {
@@ -22,6 +16,9 @@ public class InputFileHandler {
 	}
 	
 	private Path extractDirectoryPath;
+	public Path getExtractDirectoryPath() {
+		return this.extractDirectoryPath;
+	}
 	private List<Path> extractedFilePathList;
 	
 	public InputFileHandler(Path inputFilePath) throws IOException {

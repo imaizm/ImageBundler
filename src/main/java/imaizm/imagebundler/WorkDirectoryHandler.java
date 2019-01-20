@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class WorkDirectoryHandler {
 
@@ -24,26 +25,11 @@ public class WorkDirectoryHandler {
 		this.tempDirectoryPath = System.getProperty("java.io.tmpdir");
 		// 仮ディレクトリ：日時＋乱数５桁
 		this.workDirectoryName = 
-			(DateTimeFormatter.ofPattern("yyyy/MM/dd").format(LocalDate.now())) +
+			(DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now())) +
 			(new DecimalFormat("#####")).format((int) (Math.random() * 100000D));
 		
 		// 仮ディレクトリの作成
 		this.workDirectoryPath = Files.createDirectory(Paths.get(tempDirectoryPath, workDirectoryName));
-		
-		try {
-			System.out.println("input file info...");
-			System.out.println("File#getAbsoluteFile (work) : " + this.workDirectoryPath.toAbsolutePath().toString());
-		//	System.out.println("File#getAbsoluteFile (work) : " + this.getWorkDirectory().getAbsoluteFile());
-		//	System.out.println("File#getAbsolutePath  : " + workDirectory.getAbsolutePath());
-		//	System.out.println("File#getCanonicalFile : " + workDirectory.getCanonicalFile());
-		//	System.out.println("File#getCanonicalPath : " + workDirectory.getCanonicalPath());
-		//	System.out.println("File#getName          : " + workDirectory.getName());
-		//	System.out.println("File#getParent        : " + workDirectory.getParent());
-		//	System.out.println("File#getParentFile    : " + workDirectory.getParentFile());
-		//	System.out.println("File#getPath          : " + workDirectory.getPath());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 	
 	public File getWorkDirectory() {

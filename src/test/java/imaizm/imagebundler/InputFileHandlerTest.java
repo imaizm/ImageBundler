@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -54,6 +55,19 @@ public class InputFileHandlerTest {
 				() -> assertTrue(inputFileNameList.contains("480x320.jpeg")),
 			//	() -> assertTrue(inputFileNameList.contains("480x320.png")),
 				() -> assertFalse(inputFileNameList.contains("480x320.gif")));
+			Path extractDirectoryPath = inputFileHandler.getExtractDirectoryPath();
+			List<String> beforeDeleteList =
+				Files.list(extractDirectoryPath)
+					.map(file -> file.getFileName().toString())
+					.collect(Collectors.toList());;
+			assertAll("extractedFiles",
+					() -> assertTrue(beforeDeleteList.contains("480x320.jpg")),
+					() -> assertTrue(beforeDeleteList.contains("480x320.jpeg")),
+				//	() -> assertTrue(beforeDeleteList.contains("480x320.png")),
+					() -> assertFalse(beforeDeleteList.contains("480x320.gif")));
+			
+			inputFileHandler.close();
+			assertTrue(Files.notExists(extractDirectoryPath));
 		}
 		
 		@Test
