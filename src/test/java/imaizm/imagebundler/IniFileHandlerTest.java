@@ -88,7 +88,7 @@ class IniFileHandlerTest {
 				IniFileHandler iniFileHandler = new IniFileHandler();
 				assertEquals(
 					null,
-					iniFileHandler.getWorkDirectoryOfLastTime());
+					iniFileHandler.getWorkDirectoryPathOfLastTime());
 				assertTrue(Files.exists(tempIniFile));
 				
 				iniFileHandler.writeWorkDirectoryOfLastTime(testDataPath.toAbsolutePath().toString());
