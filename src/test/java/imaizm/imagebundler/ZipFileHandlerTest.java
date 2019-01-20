@@ -26,7 +26,7 @@ class ZipFileHandlerTest {
 			Path tempInflatePath = testDataPath.getParent().resolve("inflated");
 			Files.createDirectory(tempInflatePath);
 			try {
-				File[] inflatedFiles = ZipFileHandler.inflate(testDataPath.toFile(), tempInflatePath.toFile());
+				List<Path> inflatedFilePathList = ZipFileHandler.inflate(testDataPath, tempInflatePath);
 				List<String> inflatedFileNameList =
 					Files.list(tempInflatePath)
 						.map(path -> path.getFileName().toString())
@@ -37,7 +37,6 @@ class ZipFileHandlerTest {
 				//	() -> assertTrue(inflatedFileNameList.contains("480x320.png")),
 					() -> assertFalse(inflatedFileNameList.contains("480x320.gif")));
 				
-				List<Path> inflatedFilePathList = Arrays.stream(inflatedFiles).map(file -> file.toPath()).collect(Collectors.toList());
 				for (Path inflatedFilePath : inflatedFilePathList) {
 					Files.delete(inflatedFilePath);
 				}
