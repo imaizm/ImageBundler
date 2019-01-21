@@ -1,53 +1,54 @@
 package imaizm.imagebundler;
 
-import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class InputFileHandler {
 	
-	private File[] inputFiles;
-	public File[] getInputFiles() {
-		return this.inputFiles;
+	private List<Path> inputFilePathList;
+	public List<Path> getInputFilePathList() {
+		return this.inputFilePathList;
 	}
 	
-	private File extractDirectory;
-	private File[] extractedFiles;
+	private Path extractDirectoryPath;
+	public Path getExtractDirectoryPath() {
+		return this.extractDirectoryPath;
+	}
+	private List<Path> extractedFilePathList;
 	
-	public InputFileHandler(File inputFile) throws IOException {
-		// 入力ソースの拡張子を取得
-		String inputFileExtension =
-			inputFile.getName().substring(inputFile.getName().length() - 3, inputFile.getName().length());
-
+	public InputFileHandler(Path inputFilePath) throws IOException {
+		
+		PathMatcher pmZip = FileSystems.getDefault().getPathMatcher("glob:**.zip");
+		PathMatcher pmJpg = FileSystems.getDefault().getPathMatcher("glob:**.jpg");
+		PathMatcher pmJpeg = FileSystems.getDefault().getPathMatcher("glob:**.jpeg");
+		PathMatcher pmPng = FileSystems.getDefault().getPathMatcher("glob:**.png");
+		
 		// 入力ソースがディレクトリだった場合
-		if (inputFile.isDirectory()) {
+		if (Files.isDirectory(inputFilePath)) {
 			
 			// 入力ソースのディレクトリからJpegファイルを取得
-			this.inputFiles = inputFile.listFiles(
-				new FileFilter() {
-					public boolean accept(File file) {
-						if (file.isFile() && (
-								file.getName().toLowerCase().endsWith("jpg") ||
-								file.getName().toLowerCase().endsWith("jpeg") ||
-//								file.getName().toLowerCase().endsWith("gif") ||
-								file.getName().toLowerCase().endsWith("png"))) {
-							return true;
-						} else {
-							return false;
-						}
-					}
-				});
+			this.inputFilePathList = Files.list(inputFilePath)
+				.filter(listFilePath -> (!Files.isDirectory(listFilePath))
+					&& (pmJpg.matches(listFilePath) ||
+						pmJpeg.matches(listFilePath) ||
+						pmPng.matches(listFilePath)))
+				.collect(Collectors.toList());
 
 		// 入力ソースがZipファイルだった場合
-		} else if (inputFileExtension.equalsIgnoreCase("zip")) {
+		} else if (pmZip.matches(inputFilePath)) {
 			
 			// 解凍用仮ディレクトリの作成
-			this.extractDirectory = (new WorkDirectoryHandler()).getWorkDirectory();
+			this.extractDirectoryPath = (new WorkDirectoryHandler()).getWorkDirectoryPath();
 			
 			// 入力ソースのZipファイルを解凍し、解凍されたファイル群からJpegファイルを取得
 			try {
-				this.extractedFiles = ZipFileHandler.inflate(inputFile, this.extractDirectory);
-				this.inputFiles = this.extractedFiles;
+				this.extractedFilePathList = ZipFileHandler.inflate(inputFilePath, this.extractDirectoryPath);
+				this.inputFilePathList = this.extractedFilePathList;
 			} catch (IOException e) {
 				throw e;
 			}
@@ -60,18 +61,18 @@ public class InputFileHandler {
 		}	
 	}
 	
-	public void close() {
-		if (this.extractedFiles != null) {
-			this.inputFiles = null;
+	public void close() throws IOException {
+		if (this.extractedFilePathList != null) {
+			this.inputFilePathList = null;
 			
 			// 処理済みの解凍ファイルを削除
-			for (int i=0; i<this.extractedFiles.length; i++) {
-				this.extractedFiles[i].delete();
+			for(Path extractedFilePath : this.extractedFilePathList) {
+				Files.delete(extractedFilePath);
 			}
 		}
 		
-		if (this.extractDirectory != null) {
-			extractDirectory.delete();
+		if (this.extractDirectoryPath != null) {
+			Files.delete(extractDirectoryPath);
 		}
 	}
 }

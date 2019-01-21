@@ -7,9 +7,10 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -28,8 +29,6 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.FilenameUtils;
 
-import imaizm.imagebundler.ImageConverter.ContraAspectMode;
-
 public class EntryPoint {
 
 	/**
@@ -38,46 +37,51 @@ public class EntryPoint {
 	public EntryPoint() {
 	}
 
-	public void convert(File inputFile, int width, int height)
+	public void convert(Path inputFilePath, int width, int height)
 		throws IOException {
 		
 		InputFileHandler inputFileHandler =
-			new InputFileHandler(inputFile);
+			new InputFileHandler(inputFilePath);
 		
-		this.convert(inputFile, inputFileHandler.getInputFiles(), width, height);
+		this.convert(inputFilePath, inputFileHandler.getInputFilePathList(), width, height);
 		
 		// 入力ソースがディレクトリだった場合
-		if (inputFile.isDirectory()) {
+		if (Files.isDirectory(inputFilePath)) {
 			
 			String outputZipFileName =
-				inputFile.getParent() +
-				File.separator +
-				inputFile.getName() +
-				".zip";
+				inputFilePath.getParent().resolve(
+					inputFilePath.getFileName().toString() + ".zip")
+				.toAbsolutePath().toString();
 
 			System.out.println("output zip file name : " + outputZipFileName);
 
-			this.store(inputFileHandler.getInputFiles(), outputZipFileName);
+			this.store(inputFileHandler.getInputFilePathList(), outputZipFileName);
 		}
 		
 		inputFileHandler.close();
 	}
 	
-	private void convert(File inputFile, File[] inputFiles, int width, int height) throws IOException {
+	private void convert(Path inputFilePath, List<Path> inputFilePathList, int width, int height) throws IOException {
 		
 		File workDirectory = (new WorkDirectoryHandler()).getWorkDirectory();
 		
-		ArrayList<File> outputFileList = new ArrayList<File>();
+		ArrayList<Path> outputFilePathList = new ArrayList<Path>();
 		
 		// 処理中ダイアログ
-		ProgressMonitor progressMonitor = new ProgressMonitor(null, "変換中 : " + inputFile.getName(), "ノート", 0, inputFiles.length);
+		ProgressMonitor progressMonitor =
+			new ProgressMonitor(
+				null,
+				"変換中 : " + inputFilePath.getFileName().toString(),
+				"ノート",
+				0,
+				inputFilePathList.size());
 		progressMonitor.setMillisToDecideToPopup(0);
 		
-		for (int i = 0; i < inputFiles.length; i++) {
+		for (int i = 0; i < inputFilePathList.size(); i++) {
 			
-			progressMonitor.setNote((i+1) + " of " + inputFiles.length);
+			progressMonitor.setNote((i+1) + " of " + inputFilePathList.size());
 
-			BufferedImage bufferedImage = ImageIO.read(inputFiles[i]);
+			BufferedImage bufferedImage = ImageIO.read(inputFilePathList.get(i).toFile());
 			if (bufferedImage != null) {
 				
 				List<BufferedImage> convertedImageList = ImageConverter.convert(bufferedImage, width, height);
@@ -90,11 +94,11 @@ public class EntryPoint {
 							workDirectory.getAbsolutePath() +
 							File.separator +
 							FilenameUtils.getBaseName(
-								inputFiles[i].getName()) +
+								inputFilePathList.get(i).getFileName().toString()) +
 							((convertedImageList.size() == 1) ? "" : "_" + Integer.toString(index)) +
 							".jpg";
-						File outputFile = writeJpegFile(convertedImage, outputFileName, 75);
-						outputFileList.add(outputFile);
+						Path outputFilePath = writeJpegFile(convertedImage, outputFileName, 75);
+						outputFilePathList.add(outputFilePath);
 				}
 				
 			}
@@ -103,21 +107,22 @@ public class EntryPoint {
 		}
 
 		// 拡張子を除去
-		String inputFileName = FilenameUtils.getBaseName(inputFile.getName());
+		String inputFileName = FilenameUtils.getBaseName(inputFilePath.getFileName().toString());
 		
 		String outputZipFileName =
-			inputFile.getParent() +
-			File.separator +
-			inputFileName +
-			"_reduced.zip";
+			inputFilePath
+				.getParent()
+				.resolve(
+					inputFileName + "_reduced.zip")
+				.toAbsolutePath().toString();
 
 		System.out.println("output zip file name : " + outputZipFileName);
 
-		this.store((File[])outputFileList.toArray(new File[0]), outputZipFileName);
+		this.store(outputFilePathList, outputZipFileName);
 		
 		// 一時ファイルを削除
-		for (Iterator<File> it=outputFileList.iterator(); it.hasNext();) {
-			it.next().delete();
+		for (Path outputFilePath : outputFilePathList) {
+			Files.delete(outputFilePath);
 		}
 		workDirectory.delete();
 	}
@@ -135,7 +140,7 @@ public class EntryPoint {
 	}
 */
 
-	private File writeJpegFile(
+	private Path writeJpegFile(
 		BufferedImage inputBufferedImage,
 		String outputFileName,
 		int compressionQualityPercentage)
@@ -146,7 +151,7 @@ public class EntryPoint {
 			inputBufferedImage = fillTransparentPixels(inputBufferedImage, Color.WHITE);
 		}
 		
-		File outputFile = new File(outputFileName);
+		Path outputFilePath = Paths.get(outputFileName);
 		float compressionQuality = (float) compressionQualityPercentage / 100F;
 		ImageWriter imageWriter;
 		ImageWriteParam imageWriteParam;
@@ -157,7 +162,7 @@ public class EntryPoint {
 			imageWriter.write(null, new IIOImage(inputBufferedImage, null, null), imageWriteParam)) {
 			
 			ImageOutputStream imageOutputStream =
-				ImageIO.createImageOutputStream(outputFile);
+				ImageIO.createImageOutputStream(outputFilePath.toFile());
 			imageWriter = imageWriters.next();
 			imageWriter.setOutput(imageOutputStream);
 			imageWriteParam = imageWriter.getDefaultWriteParam();
@@ -165,7 +170,7 @@ public class EntryPoint {
 			imageWriteParam.setCompressionQuality(compressionQuality);
 		}
 
-		return outputFile;
+		return outputFilePath;
 	}
 
 	// 透過情報をfillColorに置き換えたBufferedImageを返却
@@ -184,56 +189,64 @@ public class EntryPoint {
 		return outputBufferdImage;
 	}
 	
-	private File store(File targetFiles[], String outputFileName)
+	private Path store(List<Path> targetFilePathList, String outputFileName)
 		throws IOException {
 		
-		File outputFile = new File(outputFileName);
-		ZipArchiveOutputStream zipOutputStream =
+		Path outputFilePath = Paths.get(outputFileName);
+		try (ZipArchiveOutputStream zipOutputStream =
 			new ZipArchiveOutputStream(
 				new BufferedOutputStream(
-					new FileOutputStream(outputFile)));
-		zipOutputStream.setMethod(ZipArchiveOutputStream.STORED);
-		zipOutputStream.setEncoding("MS932");
-		
-		for (int i = 0; i < targetFiles.length; i++) {
+					Files.newOutputStream(outputFilePath)))) {
 			
-			File targetFile = targetFiles[i];
-			ZipArchiveEntry zipEntry = new ZipArchiveEntry(targetFile.getName());
-			zipEntry.setTime(targetFile.lastModified());
-			zipEntry.setSize(targetFile.length());
-			CRC32 crc = new CRC32();
-			BufferedInputStream bufferedInputStream =
-				new BufferedInputStream(
-						new FileInputStream(targetFile));
-
-			byte buffer[] = new byte[4096];
-			int readSize;
-			int totalReadSize = 0;
-			while ((readSize = bufferedInputStream.read(buffer)) != -1) {
-				totalReadSize += readSize;
-				crc.update(buffer, 0, readSize);
+			zipOutputStream.setMethod(ZipArchiveOutputStream.STORED);
+			zipOutputStream.setEncoding("MS932");
+			
+			for (Path targetFilePath : targetFilePathList) {
+				
+				ZipArchiveEntry zipEntry = new ZipArchiveEntry(targetFilePath.getFileName().toString());
+				zipEntry.setTime(Files.getLastModifiedTime(targetFilePath).toMillis());
+				zipEntry.setSize(Files.size(targetFilePath));
+				
+				CRC32 crc = new CRC32();
+				try (BufferedInputStream bufferedInputStream =
+					new BufferedInputStream(
+						Files.newInputStream(targetFilePath))) {
+	
+					byte buffer[] = new byte[4096];
+					int readSize;
+					int totalReadSize = 0;
+					while ((readSize = bufferedInputStream.read(buffer)) != -1) {
+						totalReadSize += readSize;
+						crc.update(buffer, 0, readSize);
+					}
+					
+					zipEntry.setCrc(crc.getValue());
+					zipEntry.setSize(totalReadSize);
+				} catch (IOException e) {
+					throw e;
+				}
+				
+				zipOutputStream.putArchiveEntry(zipEntry);
+				
+				try (BufferedInputStream bufferedInputStream =
+					new BufferedInputStream(
+						Files.newInputStream(targetFilePath))) {
+				
+					byte buffer[] = new byte[4096];
+					int readSize;
+					while ((readSize = bufferedInputStream.read(buffer)) != -1) {
+						zipOutputStream.write(buffer, 0, readSize);
+					}
+				} catch (IOException e) {
+					throw e;
+				}
+				
+				zipOutputStream.closeArchiveEntry();
 			}
-			bufferedInputStream.close();
-			
-			zipEntry.setCrc(crc.getValue());
-			zipEntry.setSize(totalReadSize);
-			
-			zipOutputStream.putArchiveEntry(zipEntry);
-			
-			bufferedInputStream =
-				new BufferedInputStream(
-					new FileInputStream(targetFile));
-			
-			while ((readSize = bufferedInputStream.read(buffer)) != -1) {
-				zipOutputStream.write(buffer, 0, readSize);
-			}
-			bufferedInputStream.close();
-			
-			zipOutputStream.closeArchiveEntry();
+		} catch (IOException e) {
+			throw e;
 		}
-
-		zipOutputStream.close();
-		return outputFile;
+		return outputFilePath;
 	}
 	
 	public static void main(String args[]) {
@@ -289,12 +302,12 @@ public class EntryPoint {
 		// 引数にて対象ファイルの指定があった場合
 		} else if (args.length == 1) {
 			String filePath = args[0];
-			File inputFile = new File(filePath);
-			if (!inputFile.exists()) {
+			Path inputFilePath = Paths.get(filePath);
+			if (Files.notExists(inputFilePath)) {
 				System.out.println("エラー：指定されたファイル/フォルダが存在しません。");
 				return returnCode;
 			}
-			targetFileList.add(inputFile);
+			targetFileList.add(inputFilePath.toFile());
 		// 引数の指定に誤りがある場合
 		} else {
 			System.out.println("エラー：引数が指定されていません。");
@@ -322,7 +335,7 @@ public class EntryPoint {
 		//	System.out.println("File#getParentFile    : " + targetFile.getParentFile());
 		//	System.out.println("File#getPath          : " + targetFile.getPath());
 			
-			converter.convert(targetFile, 768, 1024);
+			converter.convert(targetFile.toPath(), 768, 1024);
 			
 			progressMonitor.setProgress(i+1);
 		}
