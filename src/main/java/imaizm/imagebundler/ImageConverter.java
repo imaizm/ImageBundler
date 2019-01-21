@@ -1,12 +1,25 @@
 package imaizm.imagebundler;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Transparency;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+
+import imaizm.imagebundler.ImageConverter.ContraAspectMode;
 
 public class ImageConverter {
 	
@@ -157,4 +170,53 @@ public class ImageConverter {
 		return newImage;
 	}
 
+	public static File writeJpegFile(
+		BufferedImage inputBufferedImage,
+		String outputFileName,
+		int compressionQualityPercentage)
+		throws IOException {
+		
+		// 変換元画像が透過情報を持っている場合、透過情報を白色に置き換える
+		if (inputBufferedImage.getColorModel().getTransparency() != Transparency.OPAQUE) {
+			inputBufferedImage = fillTransparentPixels(inputBufferedImage, Color.WHITE);
+		}
+		
+		File outputFile = new File(outputFileName);
+		float compressionQuality = (float) compressionQualityPercentage / 100F;
+		ImageWriter imageWriter;
+		ImageWriteParam imageWriteParam;
+		
+		for (
+			Iterator<ImageWriter> imageWriters = ImageIO.getImageWritersByFormatName("jpg");
+			imageWriters.hasNext();
+			imageWriter.write(null, new IIOImage(inputBufferedImage, null, null), imageWriteParam)) {
+			
+			ImageOutputStream imageOutputStream =
+				ImageIO.createImageOutputStream(outputFile);
+			imageWriter = imageWriters.next();
+			imageWriter.setOutput(imageOutputStream);
+			imageWriteParam = imageWriter.getDefaultWriteParam();
+			imageWriteParam.setCompressionMode(2);
+			imageWriteParam.setCompressionQuality(compressionQuality);
+		}
+
+		return outputFile;
+	}
+
+	// 透過情報をfillColorに置き換えたBufferedImageを返却
+	public static BufferedImage fillTransparentPixels(
+		BufferedImage inputBufferdImage, 
+		Color fillColor) {
+		int w = inputBufferdImage.getWidth();
+		int h = inputBufferdImage.getHeight();
+		BufferedImage outputBufferdImage =
+			new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = outputBufferdImage.createGraphics();
+		g.setColor(fillColor);
+		g.fillRect(0,0,w,h);
+		g.drawRenderedImage(inputBufferdImage, null);
+		g.dispose();
+		return outputBufferdImage;
+	}
+	
 }
