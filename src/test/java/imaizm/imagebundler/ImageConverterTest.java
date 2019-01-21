@@ -57,7 +57,7 @@ class ImageConverterTest {
 		}
 
 		@Test
-		@DisplayName("480x320の画像を240x320の画像２枚に縦分割(左->右)")
+		@DisplayName("480x320の画像を120x160の画像２枚に縦分割(指定サイズは120x160=等アスペクト比)")
 		void test01_03() throws IOException {
 			Path testDataPath = Paths.get("src/test/resources/imaizm/imagebundler/ImageConverterTest/Convert/test01");
 			Path inputFilePath = testDataPath.resolve("480x320.jpg");
@@ -65,14 +65,49 @@ class ImageConverterTest {
 			List<BufferedImage> outputImageList = ImageConverter.convert(inputImage, 120, 160,
 				ImageConverter.BindingSide.LEFT,
 				ImageConverter.ContraAspectMode.SPLIT);
-			Path outputDirPath = testDataPath.resolve("outputFiles");
-			ImageConverter.writeJpegFile(outputImageList.get(0), outputDirPath.resolve("03_01.jpg").toAbsolutePath().toString(), 30);
-			ImageConverter.writeJpegFile(outputImageList.get(1), outputDirPath.resolve("03_02.jpg").toAbsolutePath().toString(), 30);
 			assertAll("outputImageList-width-height",
 				() -> assertEquals(120, outputImageList.get(0).getWidth()),
 				() -> assertEquals(160, outputImageList.get(0).getHeight()),
 				() -> assertEquals(120, outputImageList.get(1).getWidth()),
 				() -> assertEquals(160, outputImageList.get(1).getHeight()));
+			Path outputDirPath = testDataPath.resolve("outputFiles");
+			ImageConverter.writeJpegFile(outputImageList.get(0), outputDirPath.resolve("03_01.jpg").toAbsolutePath().toString(), 30);
+			ImageConverter.writeJpegFile(outputImageList.get(1), outputDirPath.resolve("03_02.jpg").toAbsolutePath().toString(), 30);
+		}
+		
+		@Test
+		@DisplayName("480x320の画像を120x160の画像２枚に縦分割(指定サイズは120x320=不等アスペクト比)")
+		void test01_04() throws IOException {
+			Path testDataPath = Paths.get("src/test/resources/imaizm/imagebundler/ImageConverterTest/Convert/test01");
+			Path inputFilePath = testDataPath.resolve("480x320.jpg");
+			BufferedImage inputImage = ImageIO.read(inputFilePath.toFile());
+			List<BufferedImage> outputImageList = ImageConverter.convert(inputImage, 120, 320,
+				ImageConverter.BindingSide.LEFT,
+				ImageConverter.ContraAspectMode.SPLIT);
+			assertAll("outputImageList-width-height",
+				() -> assertEquals(120, outputImageList.get(0).getWidth()),
+				() -> assertEquals(160, outputImageList.get(0).getHeight()),
+				() -> assertEquals(120, outputImageList.get(1).getWidth()),
+				() -> assertEquals(160, outputImageList.get(1).getHeight()));
+			Path outputDirPath = testDataPath.resolve("outputFiles");
+			ImageConverter.writeJpegFile(outputImageList.get(0), outputDirPath.resolve("04_01.jpg").toAbsolutePath().toString(), 30);
+			ImageConverter.writeJpegFile(outputImageList.get(1), outputDirPath.resolve("04_02.jpg").toAbsolutePath().toString(), 30);
+		}
+		
+		@Test
+		@DisplayName("480x320の画像を反時計回りに90°回転させ320x480の画像に変換")
+		void test01_05() throws IOException {
+			Path testDataPath = Paths.get("src/test/resources/imaizm/imagebundler/ImageConverterTest/Convert/test01");
+			Path inputFilePath = testDataPath.resolve("480x320.jpg");
+			BufferedImage inputImage = ImageIO.read(inputFilePath.toFile());
+			List<BufferedImage> outputImageList = ImageConverter.convert(inputImage, 320, 480,
+				ImageConverter.BindingSide.LEFT,
+				ImageConverter.ContraAspectMode.ROTATE);
+			assertAll("outputImageList-width-height",
+				() -> assertEquals(320, outputImageList.get(0).getWidth()),
+				() -> assertEquals(480, outputImageList.get(0).getHeight()));
+			Path outputDirPath = testDataPath.resolve("outputFiles");
+			ImageConverter.writeJpegFile(outputImageList.get(0), outputDirPath.resolve("05.jpg").toAbsolutePath().toString(), 30);
 		}
 
 		@Test
