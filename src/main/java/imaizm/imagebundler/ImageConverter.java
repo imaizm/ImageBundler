@@ -105,11 +105,14 @@ public class ImageConverter {
 			bufferedImageList.add(srcImage);
 		}
 
-		for (BufferedImage bufferedImage : bufferedImageList) {
+
+		for (int i=0; i<bufferedImageList.size(); i++) {
+			BufferedImage bufferedImage = bufferedImageList.get(i);
 			// 縮小後の幅・高さ値を取得
 			Dimension dimension = getScaledDimension(width, height, bufferedImage.getWidth(), bufferedImage.getHeight());
-			bufferedImage = resize(bufferedImage, dimension.width, dimension.height);
+			bufferedImageList.set(i, resize(bufferedImage, dimension.width, dimension.height));
 		}
+
 		
 		return bufferedImageList;
 	}
