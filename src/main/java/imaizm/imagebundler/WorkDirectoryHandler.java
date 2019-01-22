@@ -1,13 +1,11 @@
 package imaizm.imagebundler;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class WorkDirectoryHandler {
@@ -30,10 +28,6 @@ public class WorkDirectoryHandler {
 		
 		// 仮ディレクトリの作成
 		this.workDirectoryPath = Files.createDirectory(Paths.get(tempDirectoryPath, workDirectoryName));
-	}
-	
-	public File getWorkDirectory() {
-		return this.workDirectoryPath.toFile();
 	}
 	
 	public Path getWorkDirectoryPath() {

@@ -63,7 +63,7 @@ public class EntryPoint {
 	
 	private void convert(Path inputFilePath, List<Path> inputFilePathList, int width, int height) throws IOException {
 		
-		File workDirectory = (new WorkDirectoryHandler()).getWorkDirectory();
+		Path workDirectoryPath = (new WorkDirectoryHandler()).getWorkDirectoryPath();
 		
 		ArrayList<Path> outputFilePathList = new ArrayList<Path>();
 		
@@ -91,7 +91,7 @@ public class EntryPoint {
 					index++;
 					
 					String outputFileName = 
-							workDirectory.getAbsolutePath() +
+							workDirectoryPath.toAbsolutePath().toString() +
 							File.separator +
 							FilenameUtils.getBaseName(
 								inputFilePathList.get(i).getFileName().toString()) +
@@ -124,7 +124,7 @@ public class EntryPoint {
 		for (Path outputFilePath : outputFilePathList) {
 			Files.delete(outputFilePath);
 		}
-		workDirectory.delete();
+		Files.delete(workDirectoryPath);
 	}
 
 /*
@@ -275,7 +275,7 @@ public class EntryPoint {
 
 			// iniファイルが有ればそこから前回の作業ディレクトリを取得
 			IniFileHandler iniFileHandler = new IniFileHandler();
-			File currentDirectoryForJFileChooser = iniFileHandler.getWorkDirectoryOfLastTime();
+			Path currentDirectoryPathForJFileChooser = iniFileHandler.getWorkDirectoryPathOfLastTime();
 			
 			String parentDirectoryOfSelectedFile = null;
 			
@@ -283,8 +283,8 @@ public class EntryPoint {
 			jFileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 			jFileChooser.setMultiSelectionEnabled(true);
 			
-			if (currentDirectoryForJFileChooser != null) {
-				jFileChooser.setCurrentDirectory(currentDirectoryForJFileChooser);
+			if (currentDirectoryPathForJFileChooser != null) {
+				jFileChooser.setCurrentDirectory(currentDirectoryPathForJFileChooser.toFile());
 			}
 			
 			int state = jFileChooser.showOpenDialog(null);
