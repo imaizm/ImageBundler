@@ -2,7 +2,6 @@ package imaizm.imagebundler;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,10 +11,6 @@ public class IniFileHandler {
 	
 	private Path iniFilePath;
 	private Path workDirectoryPathOfLastTime;
-	
-	public File getWorkDirectoryOfLastTime() {
-		return this.workDirectoryPathOfLastTime.toFile();
-	}
 	
 	public Path getWorkDirectoryPathOfLastTime() {
 		return this.workDirectoryPathOfLastTime;

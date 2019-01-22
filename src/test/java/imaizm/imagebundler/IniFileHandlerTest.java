@@ -44,7 +44,7 @@ class IniFileHandlerTest {
 				IniFileHandler iniFileHandler = new IniFileHandler();
 				assertEquals(
 					testDataPath.toAbsolutePath().toString(),
-					iniFileHandler.getWorkDirectoryOfLastTime().getAbsolutePath());
+					iniFileHandler.getWorkDirectoryPathOfLastTime().toAbsolutePath().toString());
 				
 				Files.delete(tempIniFile);
 			}
@@ -69,7 +69,7 @@ class IniFileHandlerTest {
 				IniFileHandler iniFileHandler = new IniFileHandler();
 				assertEquals(
 					testDataPath.toAbsolutePath().toString(),
-					iniFileHandler.getWorkDirectoryOfLastTime().getAbsolutePath());
+					iniFileHandler.getWorkDirectoryPathOfLastTime().toAbsolutePath().toString());
 				
 				Files.delete(tempIniFile);
 			}

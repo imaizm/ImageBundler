@@ -19,8 +19,6 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
-import imaizm.imagebundler.ImageConverter.ContraAspectMode;
-
 public class ImageConverter {
 	
 	public static enum ContraAspectMode {
