@@ -106,14 +106,21 @@ public class EntryPoint {
 			progressMonitor.setProgress(i+1);
 		}
 
-		// 拡張子を除去
-		String inputFileName = FilenameUtils.getBaseName(inputFilePath.getFileName().toString());
+		// 出力ファイル名のベース文字列の設定
+		String outputFileNameBase;
+		if (Files.isDirectory(inputFilePath)) {
+			// 入力がディレクトリの場合、入力名をそのまま設定
+			outputFileNameBase = inputFilePath.getFileName().toString();
+		} else {
+			// 入力がファイルの場合、入力名から拡張子を除去
+			outputFileNameBase = FilenameUtils.getBaseName(inputFilePath.getFileName().toString());
+		}
 		
 		String outputZipFileName =
 			inputFilePath
 				.getParent()
 				.resolve(
-					inputFileName + "_reduced.zip")
+					outputFileNameBase + "_reduced.zip")
 				.toAbsolutePath().toString();
 
 		System.out.println("output zip file name : " + outputZipFileName);
