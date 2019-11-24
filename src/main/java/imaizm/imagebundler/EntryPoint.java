@@ -159,7 +159,7 @@ public class EntryPoint {
 		}
 		
 		Path outputFilePath = Paths.get(outputFileName);
-		float compressionQuality = (float) compressionQualityPercentage / 100F;
+		float compressionQuality = compressionQualityPercentage / 100F;
 		ImageWriter imageWriter;
 		ImageWriteParam imageWriteParam;
 		

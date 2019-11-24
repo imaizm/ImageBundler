@@ -151,8 +151,8 @@ public class ImageConverter {
 		// 幅・高さそれぞれの比率のうち小さい方を共通の縮小率として採用
 		double scale = widthScale >= heightScale ? heightScale : widthScale;
 		// 共通の縮小率で幅・高さの縮小値を算出
-		int scaledWidth = (int) ((double) width * scale);
-		int scaledHeight = (int) ((double) height * scale);
+		int scaledWidth = (int) (width * scale);
+		int scaledHeight = (int) (height * scale);
 		// 縮小済みの幅・高さをDimensionインスタンスとして返却
 		return new Dimension(scaledWidth, scaledHeight);
 	}
@@ -183,7 +183,7 @@ public class ImageConverter {
 		}
 		
 		File outputFile = new File(outputFileName);
-		float compressionQuality = (float) compressionQualityPercentage / 100F;
+		float compressionQuality = compressionQualityPercentage / 100F;
 		ImageWriter imageWriter;
 		ImageWriteParam imageWriteParam;
 		
