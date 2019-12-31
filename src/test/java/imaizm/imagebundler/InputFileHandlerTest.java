@@ -80,5 +80,22 @@ public class InputFileHandlerTest {
 					() -> new InputFileHandler(testDataPath));
 			assertEquals(e.getMessage(), "未対応のファイル形式です。");
 		}
+
+		@Test
+		@DisplayName("対象：ディレクトリ（拡張子の大文字小文字区別なし確認）")
+		void test04() throws IOException {
+			Path testDataPath = Paths.get("src/test/resources/imaizm/imagebundler/InputFileHandlerTest/constructor/test04");
+			InputFileHandler inputFileHandler = new InputFileHandler(testDataPath);
+			List<String> inputFileNameList =
+					inputFileHandler.getInputFilePathList()
+							.stream()
+							.map(file -> file.getFileName().toString())
+							.collect(Collectors.toList());
+			assertAll("inputFiles",
+					() -> assertTrue(inputFileNameList.contains("480x320.JPG")),
+					() -> assertTrue(inputFileNameList.contains("480x320.JPEG")),
+					() -> assertTrue(inputFileNameList.contains("480x320.PNG")),
+					() -> assertFalse(inputFileNameList.contains("480x320.GIF")));
+		}
 	}
 }

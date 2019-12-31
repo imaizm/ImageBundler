@@ -23,11 +23,15 @@ public class InputFileHandler {
 	
 	public InputFileHandler(Path inputFilePath) throws IOException {
 		
-		PathMatcher pmZip = FileSystems.getDefault().getPathMatcher("glob:**.zip");
-		PathMatcher pmJpg = FileSystems.getDefault().getPathMatcher("glob:**.jpg");
-		PathMatcher pmJpeg = FileSystems.getDefault().getPathMatcher("glob:**.jpeg");
-		PathMatcher pmPng = FileSystems.getDefault().getPathMatcher("glob:**.png");
-		
+//		PathMatcher pmZip = FileSystems.getDefault().getPathMatcher("glob:**.zip");
+//		PathMatcher pmJpg = FileSystems.getDefault().getPathMatcher("glob:**.jpg");
+//		PathMatcher pmJpeg = FileSystems.getDefault().getPathMatcher("glob:**.jpeg");
+//		PathMatcher pmPng = FileSystems.getDefault().getPathMatcher("glob:**.png");
+		PathMatcher pmZip = FileSystems.getDefault().getPathMatcher("regex:.+\\.(?i)zip");
+		PathMatcher pmJpg = FileSystems.getDefault().getPathMatcher("regex:.+\\.(?i)jpg");
+		PathMatcher pmJpeg = FileSystems.getDefault().getPathMatcher("regex:.+\\.(?i)jpeg");
+		PathMatcher pmPng = FileSystems.getDefault().getPathMatcher("regex:.+\\.(?i)png");
+
 		// 入力ソースがディレクトリだった場合
 		if (Files.isDirectory(inputFilePath)) {
 			
