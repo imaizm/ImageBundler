@@ -81,7 +81,10 @@ public class EntryPoint {
 			
 			progressMonitor.setNote((i+1) + " of " + inputFilePathList.size());
 
-			BufferedImage bufferedImage = ImageIO.read(inputFilePathList.get(i).toFile());
+			File inputFile = inputFilePathList.get(i).toFile();
+			System.out.println("-> " + inputFile.getName());
+
+			BufferedImage bufferedImage = ImageIO.read(inputFile);
 			if (bufferedImage != null) {
 				
 				List<BufferedImage> convertedImageList = ImageConverter.convert(bufferedImage, width, height);

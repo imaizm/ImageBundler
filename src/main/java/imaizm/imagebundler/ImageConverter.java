@@ -158,9 +158,12 @@ public class ImageConverter {
 	}
 
 	private static BufferedImage resize(BufferedImage srcImage, int width, int height) {
-		
+
+		int newImageType = (srcImage.getType() == 0) ? BufferedImage.TYPE_4BYTE_ABGR_PRE : srcImage.getType();
+
 		BufferedImage newImage =
-			new BufferedImage(width, height, srcImage.getType());
+//			new BufferedImage(width, height, srcImage.getType());
+			new BufferedImage(width, height, newImageType);
 
 		Graphics newImageGraphics = newImage.getGraphics();
 		newImageGraphics.drawImage(
