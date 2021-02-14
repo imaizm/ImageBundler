@@ -163,29 +163,22 @@ public class EntryPoint {
 		
 		Path outputFilePath = Paths.get(outputFileName);
 		float compressionQuality = compressionQualityPercentage / 100F;
-		ImageWriter imageWriter = null;
-		ImageWriteParam imageWriteParam;
-		
+
 		for (
 			Iterator<ImageWriter> imageWriters = ImageIO.getImageWritersByFormatName("jpg");
 			imageWriters.hasNext();
-			imageWriter.write(null, new IIOImage(inputBufferedImage, null, null), imageWriteParam)) {
-
-			if (imageWriter != null) {
-				imageWriter.dispose();
-			}
-
+		) {
 			ImageOutputStream imageOutputStream =
 				ImageIO.createImageOutputStream(outputFilePath.toFile());
-			imageWriter = imageWriters.next();
+			ImageWriter imageWriter = imageWriters.next();
 			imageWriter.setOutput(imageOutputStream);
-			imageWriteParam = imageWriter.getDefaultWriteParam();
+			ImageWriteParam imageWriteParam = imageWriter.getDefaultWriteParam();
 			imageWriteParam.setCompressionMode(2);
 			imageWriteParam.setCompressionQuality(compressionQuality);
 
-		}
-
-		if (imageWriter != null) {
+			imageWriter.write(null, new IIOImage(inputBufferedImage, null, null), imageWriteParam);
+			imageOutputStream.flush();
+			imageOutputStream.close();
 			imageWriter.dispose();
 		}
 
