@@ -35,7 +35,7 @@ public class InputFileHandler {
 		// 入力ソースがディレクトリだった場合
 		if (Files.isDirectory(inputFilePath)) {
 			
-			// 入力ソースのディレクトリからJpegファイルを取得
+			// 入力ソースのディレクトリからjpg/jpeg/pngファイルを取得
 			this.inputFilePathList = Files.list(inputFilePath)
 				.filter(listFilePath -> (!Files.isDirectory(listFilePath))
 					&& (pmJpg.matches(listFilePath) ||

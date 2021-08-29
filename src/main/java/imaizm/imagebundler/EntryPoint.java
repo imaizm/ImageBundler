@@ -284,41 +284,56 @@ public class EntryPoint {
 		
 		// 引数にて対象ファイルの指定がなかった場合
 		if (args.length == 0) {
+			//
+			// ファイル/ディレクトリ選択ダイアログを表示
+			//
 
 			// iniファイルが有ればそこから前回の作業ディレクトリを取得
 			IniFileHandler iniFileHandler = new IniFileHandler();
 			Path currentDirectoryPathForJFileChooser = iniFileHandler.getWorkDirectoryPathOfLastTime();
 			
 			String parentDirectoryOfSelectedFile = null;
-			
+
+			// JFileChooserを初期化
+			// ・ディレクトリも選択可に設定
+			// ・複数選択可に設定
 			JFileChooser jFileChooser = new JFileChooser();
 			jFileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 			jFileChooser.setMultiSelectionEnabled(true);
-			
+			// ・前回の作業ディレクトリを初期ディレクトリに設定（あれば）
 			if (currentDirectoryPathForJFileChooser != null) {
 				jFileChooser.setCurrentDirectory(currentDirectoryPathForJFileChooser.toFile());
 			}
-			
+
+			// JFileChooser起動
 			int state = jFileChooser.showOpenDialog(null);
 			if (state == JFileChooser.APPROVE_OPTION) {
+				// 選択あれば
+
+				// 選択されたファイル/ディレクトリをtargetFileListに格納
 				for(File targetFile : jFileChooser.getSelectedFiles()) {
 					targetFileList.add(targetFile);
 					parentDirectoryOfSelectedFile = targetFile.getParent();
 				}
 			} else {
+				// 選択がなかった場合→そのまま終了
 				return returnCode;
 			}
-			
+
+			// 今回の作業ディレクトリを「前回の作業ディレクトリ」として記録
 			iniFileHandler.writeWorkDirectoryOfLastTime(parentDirectoryOfSelectedFile);
 			
 		// 引数にて対象ファイルの指定があった場合
 		} else if (args.length == 1) {
+			// 指定されたファイル/ディレクトリパスの存在チェック
 			String filePath = args[0];
 			Path inputFilePath = Paths.get(filePath);
 			if (Files.notExists(inputFilePath)) {
+				// 存在しなかった場合→エラー終了
 				System.out.println("エラー：指定されたファイル/フォルダが存在しません。");
 				return returnCode;
 			}
+			// 存在した場合、targetFileListに格納
 			targetFileList.add(inputFilePath.toFile());
 		// 引数の指定に誤りがある場合
 		} else {
@@ -326,11 +341,13 @@ public class EntryPoint {
 			return returnCode;
 		}
 
-		// 処理中ダイアログ
+		// 処理中ダイアログの準備
 		ProgressMonitor progressMonitor = new ProgressMonitor(null, "全体進捗", "ノート", 0, targetFileList.size());
 		progressMonitor.setMillisToDecideToPopup(0);
-		
+
 		EntryPoint converter = new EntryPoint();
+
+		// targetFileListに含まれるファイル/ディレクトリを一つずつ処理
 		for (int i=0; i<targetFileList.size(); i++) {
 			
 			progressMonitor.setNote((i+1) + " of " + targetFileList.size());
