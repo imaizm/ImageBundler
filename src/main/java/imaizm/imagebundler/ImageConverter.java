@@ -26,12 +26,19 @@ public class ImageConverter {
 		SPLIT,
 		ROTATE
 	}
-	
+
 	public static enum BindingSide {
 		RIGHT,
 		LEFT
 	}
-	
+
+	public static enum CenterClipOption {
+		ON,
+		OFF
+	}
+	public static int CenterClipWidth = 1520;
+	public static int CenterClipHeight = 1080;
+
 	public static List<BufferedImage> convert(
 		BufferedImage srcImage,
 		int width,
@@ -44,35 +51,67 @@ public class ImageConverter {
 		int width,
 		int height,
 		BindingSide side) {
-		return convert(srcImage, width, height, side, ContraAspectMode.SPLIT);
+		return convert(srcImage, width, height, side, CenterClipOption.ON);
 	}
-		
+
 	public static List<BufferedImage> convert(
 		BufferedImage srcImage,
 		int width,
 		int height,
 		BindingSide side,
+		CenterClipOption centerClipOption) {
+		return convert(srcImage, width, height, side, centerClipOption, ContraAspectMode.SPLIT);
+	}
+
+	public static List<BufferedImage> convert(
+		BufferedImage srcImage,
+		int width,
+		int height,
+		BindingSide side,
+		CenterClipOption centerClipOption,
 		ContraAspectMode mode) {
 		
 		LinkedList<BufferedImage> bufferedImageList = new LinkedList<BufferedImage>();
 		
+		// 変換サイズ指定が横長に対して入力画像が縦長の場合 もしくは
+		// 変換サイズ指定が縦長に対して入力画像が横長の場合
 		if (width > height && srcImage.getWidth() < srcImage.getHeight() ||
 			width < height && srcImage.getWidth() > srcImage.getHeight()) {
-			
+
+			// 分割で対応する場合
 			if (mode == ContraAspectMode.SPLIT) {
 				
+				// 変換サイズ指定が横長の場合
 				if (width > height) {
 					int halfValue = srcImage.getHeight() / 2;
 					int offsetValue = (srcImage.getHeight() % 2 == 0) ? 0 : 1;
 					
 					bufferedImageList.add(srcImage.getSubimage(0, 0, srcImage.getWidth(), halfValue));
 					bufferedImageList.add(srcImage.getSubimage(0, halfValue, srcImage.getWidth(), halfValue + offsetValue));
+
+				// 変換サイズ指定が縦長の場合
 				} else {
-					int halfValue = srcImage.getWidth() / 2;
-					int offsetValue = (srcImage.getWidth() % 2 == 0) ? 0 : 1;
-					
-					BufferedImage leftImage = srcImage.getSubimage(0, 0, halfValue, srcImage.getHeight());
-					BufferedImage rightImage = srcImage.getSubimage(halfValue, 0, halfValue + offsetValue, srcImage.getHeight());
+					BufferedImage leftImage = null;
+					BufferedImage rightImage = null;
+
+					// 中央切り抜きオプション：ON
+					if (centerClipOption == CenterClipOption.ON) {
+						int originalWidth = srcImage.getWidth();
+						int originalHeight = srcImage.getHeight();
+						int clippingWidth = (int)((double)originalHeight * ((double)CenterClipWidth / (double)CenterClipHeight));
+						int leftPadding = (originalWidth - clippingWidth) / 2;
+
+						int halfValue = clippingWidth / 2;
+						int offsetValue = (clippingWidth % 2 == 0) ? 0 : 1;
+						leftImage = srcImage.getSubimage(leftPadding, 0, halfValue, originalHeight);
+						rightImage = srcImage.getSubimage(leftPadding + halfValue, 0, halfValue + offsetValue, originalHeight);
+					// 中央切り抜きオプション：OFF
+					} else {
+						int halfValue = srcImage.getWidth() / 2;
+						int offsetValue = (srcImage.getWidth() % 2 == 0) ? 0 : 1;
+						leftImage = srcImage.getSubimage(0, 0, halfValue, srcImage.getHeight());
+						rightImage = srcImage.getSubimage(halfValue, 0, halfValue + offsetValue, srcImage.getHeight());
+					}
 					if (side == BindingSide.RIGHT) {
 						bufferedImageList.add(rightImage);
 						bufferedImageList.add(leftImage);
