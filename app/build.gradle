@@ -31,8 +31,8 @@ jar {
 	from configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
 }
 
-test {
-	useJUnitPlatform {
-		includeEngines 'junit-jupiter'
-	}
-}
+//test {
+//	useJUnitPlatform {
+//		includeEngines 'junit-jupiter'
+//	}
+//}
