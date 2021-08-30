@@ -26,6 +26,7 @@ class ImageConverterTest {
 			BufferedImage inputImage = ImageIO.read(inputFilePath.toFile());
 			List<BufferedImage> outputImageList = ImageConverter.convert(inputImage, 240, 320,
 				ImageConverter.BindingSide.RIGHT,
+				ImageConverter.CenterClipOption.OFF,
 				ImageConverter.ContraAspectMode.SPLIT);
 			assertAll("outputImageList-width-height",
 				() -> assertEquals(240, outputImageList.get(0).getWidth()),
@@ -45,6 +46,7 @@ class ImageConverterTest {
 			BufferedImage inputImage = ImageIO.read(inputFilePath.toFile());
 			List<BufferedImage> outputImageList = ImageConverter.convert(inputImage, 240, 320,
 				ImageConverter.BindingSide.LEFT,
+				ImageConverter.CenterClipOption.OFF,
 				ImageConverter.ContraAspectMode.SPLIT);
 			assertAll("outputImageList-width-height",
 				() -> assertEquals(240, outputImageList.get(0).getWidth()),
@@ -64,6 +66,7 @@ class ImageConverterTest {
 			BufferedImage inputImage = ImageIO.read(inputFilePath.toFile());
 			List<BufferedImage> outputImageList = ImageConverter.convert(inputImage, 120, 160,
 				ImageConverter.BindingSide.LEFT,
+				ImageConverter.CenterClipOption.OFF,
 				ImageConverter.ContraAspectMode.SPLIT);
 			assertAll("outputImageList-width-height",
 				() -> assertEquals(120, outputImageList.get(0).getWidth()),
@@ -83,6 +86,7 @@ class ImageConverterTest {
 			BufferedImage inputImage = ImageIO.read(inputFilePath.toFile());
 			List<BufferedImage> outputImageList = ImageConverter.convert(inputImage, 120, 320,
 				ImageConverter.BindingSide.LEFT,
+				ImageConverter.CenterClipOption.OFF,
 				ImageConverter.ContraAspectMode.SPLIT);
 			assertAll("outputImageList-width-height",
 				() -> assertEquals(120, outputImageList.get(0).getWidth()),
@@ -102,6 +106,7 @@ class ImageConverterTest {
 			BufferedImage inputImage = ImageIO.read(inputFilePath.toFile());
 			List<BufferedImage> outputImageList = ImageConverter.convert(inputImage, 320, 480,
 				ImageConverter.BindingSide.LEFT,
+				ImageConverter.CenterClipOption.OFF,
 				ImageConverter.ContraAspectMode.ROTATE);
 			assertAll("outputImageList-width-height",
 				() -> assertEquals(320, outputImageList.get(0).getWidth()),
@@ -118,6 +123,7 @@ class ImageConverterTest {
 			BufferedImage inputImage = ImageIO.read(inputFilePath.toFile());
 			List<BufferedImage> outputImageList = ImageConverter.convert(inputImage, 320, 240,
 				ImageConverter.BindingSide.RIGHT,
+				ImageConverter.CenterClipOption.OFF,
 				ImageConverter.ContraAspectMode.SPLIT);
 			assertAll("outputImageList-width-height",
 				() -> assertEquals(320, outputImageList.get(0).getWidth()),
